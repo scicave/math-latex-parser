@@ -1,4 +1,4 @@
-let texParser = require('./index.js');
+let texParser = require('../dist/index.js');
 
 function testTex(tex){
     console.log("parsing:", tex);

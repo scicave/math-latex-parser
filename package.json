@@ -24,6 +24,7 @@
   },
   "scripts": {
     "build": "node build.js",
+    "watch": "npm-watch",
     "test": "node ./src/parser.test.js",
     "buildtest": "npm run build && npm run test"
   },
