@@ -3857,8 +3857,7 @@ peg$computePosDetails = function (pos) {
 
     return details;
   }
-}
-
+};
 
 
     input = checkBlocks(input);

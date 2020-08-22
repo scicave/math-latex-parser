@@ -3,37 +3,39 @@ let deletes = [];
 let rawInput = input; 
 
 function checkBlocks(input) {
-  let
-    ignore = /^(\s|\\ )+/, // the save as the pegjs rule "_" 
-    braceEffect = /^(\^|_|\\frac|\\sqrt)/,
-    braceImportant = false,
-    braceEffectOn = "",
-    i = { },
-    blocks = [
-      { opening: "{", closing: "}" },
-      { opening: "(", closing: ")" },
-      { opening: "[", closing: "]" },
-      { opening: "|", closing: "|" },
-      { opening: "\\{", closing: "\\}" },
-      { opening: "\\|", closing: "\\|" },
-      { opening: "\\left{", closing: "\\right}" },
-      { opening: "\\left(", closing: "\\right)" },
-      { opening: "\\left[", closing: "\\right]" },
-      { opening: "\\left|", closing: "\\right|" },
-    ],
-    stats= []
-  ;
 
-    Object.defineProperty(i,"value", {
-      get(){
-        return this.__value;
-      },
-      set(v){
-        this.__value = v;
-        this.__changed = true; 
-      }
-    });
-    i.__value = 0;
+  //#region vars
+  var
+  ignore = /^(\s|\\ )+/, // the save as the pegjs rule "_" 
+  braceEffect = /^(\^|_|\\frac|\\sqrt)/,
+  braceImportant = false,
+  braceEffectOn = "",
+  i = { },
+  blocks = [
+    { opening: "{", closing: "}" },
+    { opening: "(", closing: ")" },
+    { opening: "[", closing: "]" },
+    { opening: "|", closing: "|" },
+    { opening: "\\{", closing: "\\}" },
+    { opening: "\\|", closing: "\\|" },
+    { opening: "\\left{", closing: "\\right}" },
+    { opening: "\\left(", closing: "\\right)" },
+    { opening: "\\left[", closing: "\\right]" },
+    { opening: "\\left|", closing: "\\right|" },
+  ],
+  stats= [];
+  //#endregion
+
+  Object.defineProperty(i,"value", {
+    get(){
+      return this.__value;
+    },
+    set(v){
+      this.__value = v;
+      this.__changed = true; 
+    }
+  });
+  i.__value = 0;
 
   for (; i.value < input.length;) {
     if (braceImportant) braceImportant--;
@@ -164,5 +166,4 @@ peg$computePosDetails = function (pos) {
 
     return details;
   }
-}
-
+};
