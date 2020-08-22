@@ -1,0 +1,31 @@
+{
+  "name": "math-latex-parser",
+  "version": "1.0.0",
+  "description": "A mathematical parser for latex in math mode. We mean by mathematical that, arithmetic operations is considered for example if you pass \"1+2\", the result would by a (add node \"+\") with two children nodes of type number.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scicave/math-latex-parser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/scicave/math-latex-parser/issues"
+  },
+  "homepage": "https://github.com/scicave/math-latex-parser#readme",
+  "scripts": {
+    "build": "node build.js",
+    "test": "node ./src/parser.test.js"
+  },
+  "keywords": [
+    "parser",
+    "latex-parser",
+    "math-parser",
+    "math",
+    "mathematics"
+  ],
+  "author": "sciCave",
+  "license": "MIT",
+  "devDependencies": {
+    "pegjs": "^0.10.0",
+    "rimraf": "^3.0.2"
+  }
+}
