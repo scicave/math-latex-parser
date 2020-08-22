@@ -1,4 +1,5 @@
 {
+  
   options = Object.assign({
     autoMult: true,
     functions: [],
@@ -30,10 +31,6 @@
     ]
   }, options); /// override the default options
   
-  /**# require("./texCheckBlocks.js") */
-
-  input = checkBlocks(input);
-
 }
 
 Expression "expression" = Operation0

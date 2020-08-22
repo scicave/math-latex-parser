@@ -3,6 +3,8 @@ const fs = require('fs');
 const path = require('path');
 const rimraf = require('rimraf');
 
+let dev = process.env.NODE_ENV !== 'production';
+
 let pegjsOptions = {
     output: 'source',
     format: 'commonjs',

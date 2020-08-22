@@ -11,9 +11,22 @@
     "url": "https://github.com/scicave/math-latex-parser/issues"
   },
   "homepage": "https://github.com/scicave/math-latex-parser#readme",
+  "watch": {
+    "buildtest": {
+      "patterns": [
+        "src"
+      ],
+      "ignore": "src/index.js",
+      "quiet": true,
+      "delay": 2500,
+      "runOnChangeOnly": false
+    }
+  },
   "scripts": {
     "build": "node build.js",
-    "test": "node ./src/parser.test.js"
+    "watch": "npm-watch",
+    "test": "node ./src/parser.test.js",
+    "buildtest": "npm run build && npm run test"
   },
   "keywords": [
     "parser",
@@ -25,6 +38,7 @@
   "author": "sciCave",
   "license": "MIT",
   "devDependencies": {
+    "npm-watch": "^0.7.0",
     "pegjs": "^0.10.0",
     "rimraf": "^3.0.2"
   }
