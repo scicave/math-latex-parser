@@ -36,7 +36,7 @@
     "math",
     "mathematics"
   ],
-  "author": "sciCave",
+  "author": "scicave",
   "license": "MIT",
   "devDependencies": {
     "npm-watch": "^0.7.0",
