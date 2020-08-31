@@ -1,4 +1,4 @@
-let texParser = require('./dist/index.js');
+let texParser = require('./lib/');
 let tex = process.argv[process.argv.indexOf('--tex')+1];
 
 function logTex(tex){
