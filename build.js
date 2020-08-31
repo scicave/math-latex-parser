@@ -48,7 +48,9 @@ grammarFiles.forEach(file=>{
     let outputPath = path.resolve(__dirname, file.output);
     let outputDir = path.dirname(outputPath);
 
-    prepareOutputDir(outputDir);
+    if(outputDir !== inputDir){
+        prepareOutputDir(outputDir);
+    }
 
     console.log('compiling>>>>>>>>>>>>>');
     console.log(inputPath);
@@ -74,21 +76,23 @@ grammarFiles.forEach(file=>{
 
     fs.writeFileSync(outputPath, getParserCode());
 
-    // copy depedencies to the output directory
-    for(let d of Object.values(file.dependencies)){
-
-        let p1 = path.resolve(inputDir, d);
-        let p2 = path.resolve(outputDir, d);
-        let dist = path.dirname(p2);
-
-        if(!fs.existsSync(dist)){
-            fs.mkdirSync(dist, {recursive:true});
+    if(outputDir !== inputDir){
+        // copy depedencies to the output directory
+        for(let d of Object.values(file.dependencies)){
+    
+            let p1 = path.resolve(inputDir, d);
+            let p2 = path.resolve(outputDir, d);
+            let dist = path.dirname(p2);
+    
+            if(!fs.existsSync(dist)){
+                fs.mkdirSync(dist, {recursive:true});
+            }
+    
+            let readable = fs.createReadStream(p1, {encoding: 'utf-8'});
+            let writable = fs.createWriteStream(p2);
+            readable.pipe(writable);
+    
         }
-
-        let readable = fs.createReadStream(p1, {encoding: 'utf-8'});
-        let writable = fs.createWriteStream(p2);
-        readable.pipe(writable);
-
     }
 
     console.log('js code:::::::::');

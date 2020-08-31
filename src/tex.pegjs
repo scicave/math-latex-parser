@@ -122,7 +122,7 @@ simpleFactor = // for operation5Simple
   Number/ Block_VBars /* || === abs() */ /
   Name / TexEntities /* \theta, \sqrt{x}, \int, ... */
 
-Seperator
+Delimiter
   = head:Expression tail:(_ "," _ (Expression))* _{
       if (tail.length){
         return new Node("delimiter", [head].concat(tail.map(a => a[3])), { name: ',' });
@@ -154,7 +154,7 @@ Function =
   { return new Node('function', parentheses, { name }); }
 
 BlockParentheses =
-  args:("(" s:Seperator ")" {return s;} / "\\left(" s:Seperator "\\right)" {return s;})
+  args:("(" s:Delimiter ")" {return s;} / "\\left(" s:Delimiter "\\right)" {return s;})
   { return new Node('()', args); }
 
 Block_VBars =
