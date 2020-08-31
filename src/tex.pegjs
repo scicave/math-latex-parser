@@ -31,6 +31,8 @@
     ]
   }, options); /// override the default options
   
+  /**# require('./preParse.js'); */
+
 }
 
 Expression "expression" = Operation0

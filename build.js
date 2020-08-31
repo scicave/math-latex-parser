@@ -65,7 +65,7 @@ grammarFiles.forEach(file=>{
         }
         
         /// here we want to replace comment with contents file
-        code = code.replace(/\/\*\*#\s*require\s*\(\s*"(.*?)"\s*\)\s*\*\//gm, (m, g)=>{
+        code = code.replace(/\/\*\*#\s*require\s*\(\s*"(.*?)"\s*\)\s*;?\s*\*\//gm, (m, g)=>{
             return fs.readFileSync(path.resolve(inputDir, g)).toString('utf8');
         });
 
