@@ -26,7 +26,8 @@
     "build": "node build.js",
     "watch": "npm-watch",
     "test": "node ./src/parser.test.js",
-    "buildtest": "npm run build && npm run test"
+    "buildtest": "npm run build && npm run test",
+    "debug": "node ./debug.js --tex \" 1+ \\frac 4 5 \""
   },
   "keywords": [
     "parser",
