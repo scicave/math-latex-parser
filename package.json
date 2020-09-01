@@ -12,12 +12,16 @@
   },
   "homepage": "https://github.com/scicave/math-latex-parser#readme",
   "scripts": {
+    "prebuild": "node ./tools/generate-version-file.js",
     "build": "node build.js",
     "test": "jest ./src/__tests__/",
     "buildtest": "npm run build && npm run test",
-    "build:watch": "nodemon --watch src --ignore src/__tests__ --exec \"npm run build\"",
-    "buildtest:watch": "nodemon --watch src --exec \"npm run buildtest\"",
-    "test:watch": "jest ./src/__tests__/ --watch"
+    "build:watch": "nodemon --watch src --watch build.js --ignore src/version.js --ignore src/__tests__ --exec \"npm run build\"",
+    "buildtest:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/version.js --exec \"npm run buildtest\"",
+    "test:watch": "jest ./src/__tests__/ --watch",
+    "debug": "node debug.js --tex \" -2*3.1 - \\frac 1 2\"",
+    "preversion": "npm run test",
+    "postversion": "npm run build"
   },
   "keywords": [
     "parser",

@@ -23,6 +23,7 @@ let replacements = [
             "module.exports = {",
             "  SyntaxError: peg$SyntaxError,",
             "  parse:       peg$parse,",
+            "  version,",
             "  Node",
             "};",
         ].join('\n')
@@ -35,7 +36,9 @@ let grammarFiles = [
         input: './src/tex.pegjs',
         output: './lib/index.js',
         dependencies: {
-            Node: './texParserNode.js'
+            Node: './texParserNode.js',
+            version: './version.js',
+            prepareInput: './prepareInput.js'
         },
     },
 ]; 
@@ -67,7 +70,8 @@ grammarFiles.forEach(file=>{
         }
         
         /// here we want to replace comment with contents file
-        code = code.replace(/\/\*\*#\s*require\s*\(\s*"(.*?)"\s*\)\s*;?\s*\*\//gm, (m, g)=>{
+        /**# require('./preParse.js'); */
+        code = code.replace(/\/\*\*#\s*require\s*\(\s*(?:"|')(.*?)(?:"|')\s*\)\s*;?\s*\*\//gm, (m, g)=>{
             return fs.readFileSync(path.resolve(inputDir, g)).toString('utf8');
         });
 
