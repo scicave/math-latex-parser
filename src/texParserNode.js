@@ -11,15 +11,25 @@ class Node {
     this.args = args;
   }
 
-  check (t) {
-    if (this.types.values.indexOf(t) > -1) {
-      if (this.type === t) {
+
+  checkType(t){
+    if(this.types.values.indexOf(t) > -1){
+      if(this.type === t){
         return true;
       }
     } else {
-      throw new Error('invalid type, can\'t check for "' + this.type + '"');
+      throw new Error('invalid type, can\'t check for "' + t + '"');
     }
   }
+
+  check(props){
+    for(let p in props){
+      if(p === 'type') { if(!this.checkType(props.type)) return false; } 
+      else if(p !== "args" && props[p] !== this[p]) return false;
+    }
+    return true;
+  }
+
 }
 
 Node.prototype.types = {
@@ -43,7 +53,7 @@ Node.prototype.types.values = Object.values(Node.prototype.types);
 Node.prototype.types.operators = [
   '*', '/', '+', '-', '!', '^', '=', 'cdot'
 ];
-Node.types.blocks = [
+Node.prototype.types.blocks = [
   '()','{}','[]','()','{}','[]','||',
 ];
 
