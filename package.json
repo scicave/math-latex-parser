@@ -18,7 +18,7 @@
     "lint": "eslint ./src/ --fix",
     "prod": "npm run lint && npm run build && npm run test",
     "dev": "npm run build && npm run test",
-    "debug": "node debug.js --tex \" -2*3.1 - \\frac 1 2\"",
+    "debug": "node debug.js --tex \" -2*3{.1 - \\frac {1} 2\"",
     "dev:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/version.js --exec \"npm run dev\"",
     "test:watch": "jest ./src/__tests__/ --watch",
     "preversion": "npm run prod"
