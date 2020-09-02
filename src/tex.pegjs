@@ -37,28 +37,35 @@
   let rawInput = input; 
 
   text = function() {
-    return rawInput.substring(peg$savedPos+incre, peg$currPos+incre);
+    return rawInput.substring(peg$savedPos, peg$currPos);
   }
 
-  /**# require('./prepareInput.js'); */
+  input = prepareInput(input, peg$computeLocation, error);
 
-  input = prepareInput(input, deletes);
+  function createNode(...args){
+    let n = new Node(...args);
+    n.match = {
+      text: text(),
+      location: location()
+    }
+    return n;
+  }
 
 }
 
-Expression "expression" = _ Operation0 _
+Expression "expression" = _ expr:Operation0 _ { return expr; }
 
 Operation0 "operation or factor" = 
   head:Operation1 tail:(_ "=" _ Operation1)* _{
     return tail.reduce(function(result, element) {
-      return new Node("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
+      return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
   }
 
 Operation1 "operation or factor" = 
   head:Operation2 tail:(_ ("\\" title:texOperators1 !char { return title; }) _ Operation2)* _{
     return tail.reduce(function(result, element) {
-      return new Node("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
+      return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
   }
 
@@ -68,14 +75,14 @@ texOperators1 = "approx"/ "leq"/ "geq"/ "neq"/ "gg"/ "ll"/ "notin"/ "ni"/ "in"
 Operation2 "operation or factor" =
   head:Operation3 tail:(_ ("+" / "-") _ Operation3)* {
     return tail.reduce(function(result, element) {
-      return new Node("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
+      return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
   }
 
 Operation3 "operation or factor" =
   head:Operation4 tail:(_ ("*" / "/" / "\\cdot" !char { return "cdot"; }) _ Operation4)* {
     return tail.reduce(function(result, element) {
-      return new Node("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
+      return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
   }
 
@@ -83,7 +90,7 @@ Operation4 "operation or factor" =
   head:(Operation5) tail:(_ (operation5WithoutNumber))* {
     if(options.autoMult){
       return tail.reduce(function(result, element) {
-        return new Node("automult" , [result, element[1]]);
+        return createNode("automult" , [result, element[1]]);
       }, head);
     } else {
       error('invalid syntax, hint: missing * sign');
@@ -94,7 +101,7 @@ operation4Simple "operation or factor" = // for builtInFunctionsArg
   head:(operation5Simple) tail:(_ operation5Simple)* {
     if(options.autoMult){
       return tail.reduce(function(result, element) {
-        return new Node("automult" , [result, element[1]]);
+        return createNode("automult" , [result, element[1]]);
       }, head);
     } else {
       error('invalid syntax, hint: missing * sign');
@@ -136,7 +143,7 @@ simpleFactor = // for operation5Simple
 Delimiter
   = head:Expression tail:(_ "," _ (Expression))* _{
       if (tail.length){
-        return new Node("delimiter", [head].concat(tail.map(a => a[3])), { name: ',' });
+        return createNode("delimiter", [head].concat(tail.map(a => a[3])), { name: ',' });
       }
       return [head];
     }
@@ -155,22 +162,22 @@ BuiltInFunctions =
   ) _ exp:SuperScript? _ arg:builtInFunctionsArg {
     let func = new Node('function', [arg], {name, isBuiltIn:true});
     if(!exp) return func;
-    else return new Node("operator", [func, exp], { name: '^', operatorType: 'infix' });
+    else return createNode("operator", [func, exp], { name: '^', operatorType: 'infix' });
   }
 
 builtInFunctionsArg = Functions / BlockParentheses / operation4Simple
 
 Function = 
   name:$Name &{ return options.functions.indexOf(name)>-1; } _ parentheses:BlockParentheses 
-  { return new Node('function', parentheses, { name }); }
+  { return createNode('function', parentheses, { name }); }
 
 BlockParentheses =
   args:("(" s:Delimiter ")" {return s;} / "\\left(" s:Delimiter "\\right)" {return s;})
-  { return new Node('()', args); }
+  { return createNode('block', [args], '()'); }
 
 Block_VBars =
   expr:("|" e:Expression "|" {return e;} / "\\left|" e:Expression "\\right|" {return e;})
-  { return new Node('||', [expr]) }
+  { return createNode('block', [expr], '||') }
 
 ////// main factor, tokens
 
@@ -178,7 +185,7 @@ TexEntities =
     SpecialTexRules / SpecialSymbols  
 
 SpecialSymbols = "\\" name:specialSymbolsTitles !char {
-  return new Node('id', null, {name, isBuiltIn:true})
+  return createNode('id', null, {name, isBuiltIn:true})
 }
 
 SpecialTexRules = Sqrt / Integeral / Frac
@@ -188,7 +195,7 @@ Sqrt = "\\sqrt" !char _
         arg:Arg
   {
     exp = exp || new Node('number', null, { value:2 });
-    return new Node("function", [arg, exp], { name:'sqrt', isBuiltIn:true });
+    return createNode("function", [arg, exp], { name:'sqrt', isBuiltIn:true });
   }
 
 Integeral = "\\" n:("int" / "sum" / "prod") !char _
@@ -197,12 +204,12 @@ Integeral = "\\" n:("int" / "sum" / "prod") !char _
           sup:SuperScript? _ sub:SubScript? { return [sub, sup]; }
         ) _ arg:Expression
   {
-    return new Node(n, [...subsup, arg]);
+    return createNode(n, [...subsup, arg]);
   }
 
 Frac = "\\frac" !char _ 
   args:(frst:Arg _ scnd:Arg { return [frst, scnd]; })
-  { return new Node("frac", args); }
+  { return createNode("frac", args); }
 
 ///////////////////
 
@@ -215,9 +222,9 @@ Arg "function argument"= CurlyBrackets / Frac / SpecialSymbols / oneCharArg
 oneCharArg "digit or char" = [a-z0-9]i {
     let txt = text();
     if(isNaN(txt)){
-      return new Node("id", null, { name: txt });
+      return createNode("id", null, { name: txt });
     } else {
-      return new Node("number", null, {value:parseFloat(txt)});
+      return createNode("number", null, {value:parseFloat(txt)});
     }
   } / SpecialSymbols;
 
@@ -230,13 +237,13 @@ oneCharArg "digit or char" = [a-z0-9]i {
 Number "number"
   = sign:sign? _ $SimpleNumber {
     let value = parseFloat(text().replace(/[ \t\n\r]/g, ''));
-    return new Node('number', null, {value});
+    return createNode('number', null, {value});
   }
 
 SimpleNumber "number"
   = (num:[0-9]([0-9]/s)* frac? / frac) {
     let value = parseFloat(text().replace(/[ \t\n\r]/g, ''));
-    return new Node('number', null, {value});
+    return createNode('number', null, {value});
   }
 
 frac
@@ -253,7 +260,7 @@ Name "name" = (
     mini_name sub:(_ "_" _ ("{" _ w(w/s)* "}" / w))?
   ) {
     let name = text().replace(/[\s\{\}]*/g, ''); 
-    return new Node('id', null, {name})
+    return createNode('id', null, {name})
   }
 
 mini_name =
