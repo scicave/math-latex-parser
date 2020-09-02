@@ -2,7 +2,7 @@
   "name": "@scicave/math-latex-parser",
   "version": "1.0.0",
   "description": "A mathematical parser for latex in math mode. We mean by mathematical that, arithmetic operations is considered for example if you pass \"1+2\", the result would by a (add node \"+\") with two children nodes of type number.",
-  "main": "index.js",
+  "main": "./lib/index.js",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/scicave/math-latex-parser.git"
@@ -15,13 +15,13 @@
     "prebuild": "node ./tools/generate-version-file.js",
     "build": "node build.js",
     "test": "jest ./src/__tests__/",
-    "buildtest": "npm run build && npm run test",
-    "build:watch": "nodemon --watch src --watch build.js --ignore src/version.js --ignore src/__tests__ --exec \"npm run build\"",
-    "buildtest:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/version.js --exec \"npm run buildtest\"",
-    "test:watch": "jest ./src/__tests__/ --watch",
+    "lint": "eslint ./src/ --fix",
+    "prod": "npm run lint && npm run build && npm run test",
+    "dev": "npm run build && npm run test",
     "debug": "node debug.js --tex \" -2*3.1 - \\frac 1 2\"",
-    "preversion": "npm run test",
-    "postversion": "npm run build"
+    "dev:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/version.js --exec \"npm run dev\"",
+    "test:watch": "jest ./src/__tests__/ --watch",
+    "preversion": "npm run prod"
   },
   "keywords": [
     "parser",
@@ -34,6 +34,7 @@
   "author": "scicave",
   "license": "MIT",
   "devDependencies": {
+    "eslint": "^7.8.1",
     "jest": "^26.4.2",
     "nodemon": "^2.0.4",
     "pegjs": "^0.10.0",

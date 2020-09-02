@@ -1,7 +1,6 @@
 
 class Node {
-  constructor(type, args, props) {
-
+  constructor (type, args, props) {
     Object.assign(this, props);
 
     if (this.types.values.indexOf(type) === -1) {
@@ -10,48 +9,42 @@ class Node {
 
     this.type = type;
     this.args = args;
-
   }
 
-  check(t){
-    if(this.types.values.indexOf(t) > -1){
-      if(this.type === t){
+  check (t) {
+    if (this.types.values.indexOf(t) > -1) {
+      if (this.type === t) {
         return true;
       }
     } else {
-      throw new Error('invalid type, can\'t check for "' + type + '"');
+      throw new Error('invalid type, can\'t check for "' + this.type + '"');
     }
   }
 }
 
 Node.prototype.types = {
 
-  NUMBER: "number",
-  ID: "id",
-  FUNCTION: "function",
+  NUMBER: 'number',
+  ID: 'id',
+  FUNCTION: 'function',
 
-  PARENTS: "()",
-  BRACES: "{}",
-  BRACKETS: "[]",
-  ROUND_BRACKETS: "()",
-  CURLY_BRACKETS: "{}",
-  SQUARE_BRACKETS: "[]",
-  VBARS: "||",
-
-  OPERATOR: "operator",
+  OPERATOR: 'operator',
   AUTO_MULT: 'automult',
+  BLOCK: 'block',
 
-  FRAC: "frac",
-  INT: "int",
-  SUM: "sum",
-  OPERATORNAME: "operatorname",
+  FRAC: 'frac',
+  INT: 'int',
+  SUM: 'sum',
+  OPERATORNAME: 'operatorname'
 
-}
+};
 
 Node.prototype.types.values = Object.values(Node.prototype.types);
 Node.prototype.types.operators = [
-  "*", "/", "+", "-", "!", "^", "=", "cdot"
+  '*', '/', '+', '-', '!', '^', '=', 'cdot'
 ];
-
+Node.types.blocks = [
+  '()','{}','[]','()','{}','[]','||',
+];
 
 module.exports = Node;

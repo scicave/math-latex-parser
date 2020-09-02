@@ -1,116 +1,110 @@
-const pegjs = require('pegjs');
-const fs = require('fs');
-const path = require('path');
-const rimraf = require('rimraf');
+const pegjs = require('pegjs')
+const fs = require('fs')
+const path = require('path')
+const rimraf = require('rimraf')
 
-let dev = process.env.NODE_ENV !== 'production';
+const dev = process.env.NODE_ENV !== 'production'
 
-let pegjsOptions = {
-    output: 'source',
-    format: 'commonjs',
-};
+const pegjsOptions = {
+  output: 'source',
+  format: 'commonjs'
+}
 
-let replacements = [
-    {
-        text: [
-            "module.exports = {",
-            "  SyntaxError: peg$SyntaxError,",
-            "  parse:       peg$parse",
-            "};",
-        ].join('\n'),
-    
-        replacement: [
-            "module.exports = {",
-            "  SyntaxError: peg$SyntaxError,",
-            "  parse:       peg$parse,",
-            "  version,",
-            "  Node",
-            "};",
-        ].join('\n')
+const replacements = [
+  {
+    text: [
+      'module.exports = {',
+      '  SyntaxError: peg$SyntaxError,',
+      '  parse:       peg$parse',
+      '};'
+    ].join('\n'),
 
+    replacement: [
+      'module.exports = {',
+      '  SyntaxError: peg$SyntaxError,',
+      '  parse:       peg$parse,',
+      '  version,',
+      '  Node',
+      '};'
+    ].join('\n')
+
+  }
+]
+
+const grammarFiles = [
+  {
+    input: './src/tex.pegjs',
+    output: './lib/index.js',
+    dependencies: {
+      Node: './texParserNode.js',
+      version: './version.js',
+      prepareInput: './prepareInput.js'
     }
-];
+  }
+]
 
-let grammarFiles = [
-    {
-        input: './src/tex.pegjs',
-        output: './lib/index.js',
-        dependencies: {
-            Node: './texParserNode.js',
-            version: './version.js',
-            prepareInput: './prepareInput.js'
-        },
-    },
-]; 
+grammarFiles.forEach(file => {
+  pegjsOptions.dependencies = file.dependencies
+  const inputPath = path.resolve(__dirname, file.input)
+  const inputDir = path.dirname(inputPath)
+  const outputPath = path.resolve(__dirname, file.output)
+  const outputDir = path.dirname(outputPath)
 
-grammarFiles.forEach(file=>{
+  if (outputDir !== inputDir) {
+    prepareOutputDir(outputDir)
+  }
 
-    pegjsOptions.dependencies = file.dependencies;
-    let inputPath = path.resolve(__dirname, file.input);
-    let inputDir = path.dirname(inputPath);
-    let outputPath = path.resolve(__dirname, file.output);
-    let outputDir = path.dirname(outputPath);
+  console.log('compiling>>>>>>>>>>>>>')
+  console.log(inputPath)
+  console.log()
 
-    if(outputDir !== inputDir){
-        prepareOutputDir(outputDir);
-    }
+  function getParserCode () {
+    const grammar = fs.readFileSync(inputPath).toString('utf8')
+    let code = pegjs.generate(grammar, pegjsOptions)
 
-    console.log('compiling>>>>>>>>>>>>>');
-    console.log(inputPath);
-    console.log();
-
-    function getParserCode(){
-
-        let grammar = fs.readFileSync(inputPath).toString('utf8');
-        let code = pegjs.generate(grammar, pegjsOptions);
-        
-        /// some targeted replacments
-        for(let r of replacements){
-            code = code.replace(r.text, r.replacement);
-        }
-        
-        /// here we want to replace comment with contents file
-        /**# require('./preParse.js'); */
-        code = code.replace(/\/\*\*#\s*require\s*\(\s*(?:"|')(.*?)(?:"|')\s*\)\s*;?\s*\*\//gm, (m, g)=>{
-            return fs.readFileSync(path.resolve(inputDir, g)).toString('utf8');
-        });
-
-        return code;
+    /// some targeted replacments
+    for (const r of replacements) {
+      code = code.replace(r.text, r.replacement)
     }
 
-    fs.writeFileSync(outputPath, getParserCode());
+    /// here we want to replace comment with contents file
+    /** # require('./preParse.js'); */
+    code = code.replace(/\/\*\*#\s*require\s*\(\s*(?:"|')(.*?)(?:"|')\s*\)\s*;?\s*\*\//gm, (m, g) => {
+      return fs.readFileSync(path.resolve(inputDir, g)).toString('utf8')
+    })
 
-    if(outputDir !== inputDir){
-        // copy depedencies to the output directory
-        for(let d of Object.values(file.dependencies)){
-    
-            let p1 = path.resolve(inputDir, d);
-            let p2 = path.resolve(outputDir, d);
-            let dist = path.dirname(p2);
-    
-            if(!fs.existsSync(dist)){
-                fs.mkdirSync(dist, {recursive:true});
-            }
-    
-            let readable = fs.createReadStream(p1, {encoding: 'utf-8'});
-            let writable = fs.createWriteStream(p2);
-            readable.pipe(writable);
-    
-        }
+    return code
+  }
+
+  fs.writeFileSync(outputPath, getParserCode())
+
+  if (outputDir !== inputDir) {
+    // copy depedencies to the output directory
+    for (const d of Object.values(file.dependencies)) {
+      const p1 = path.resolve(inputDir, d)
+      const p2 = path.resolve(outputDir, d)
+      const dist = path.dirname(p2)
+
+      if (!fs.existsSync(dist)) {
+        fs.mkdirSync(dist, { recursive: true })
+      }
+
+      const readable = fs.createReadStream(p1, { encoding: 'utf-8' })
+      const writable = fs.createWriteStream(p2)
+      readable.pipe(writable)
     }
+  }
 
-    console.log('js code:::::::::');
-    console.log(outputPath);
-    console.log();
+  console.log('js code:::::::::')
+  console.log(outputPath)
+  console.log()
+})
 
-});
-
-
-function prepareOutputDir(outputDir){
-    if(fs.existsSync(outputDir)){
-        /// delete all the output dir content
-        rimraf.sync(path.resolve(outputDir, '*'));
-    } else {
-        fs.mkdirSync(outputDir, { recursive: true });
-    }
+function prepareOutputDir (outputDir) {
+  if (fs.existsSync(outputDir)) {
+    /// delete all the output dir content
+    rimraf.sync(path.resolve(outputDir, '*'))
+  } else {
+    fs.mkdirSync(outputDir, { recursive: true })
+  }
 }

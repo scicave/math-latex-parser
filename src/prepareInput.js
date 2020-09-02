@@ -1,43 +1,43 @@
+/* eslint-disable no-undef */
 
-module.exports = function checkBlocks(input, deletes) {
-
-  //#region vars
+module.exports = function checkBlocks (input, deletes) {
+  // #region vars
   var
     // the same as the pegjs rule "_" in ./tex.pegjs
-    ignore = /^(\s|\\ )+/,
+    ignore = /^(\s|\\ )+/;
     // when we remove the {...} block after one of these,
     // the parsing expression will result in wrong tree
-    braceEffect = /^(\^|_|\\frac|\\sqrt)/,
-    braceImportant = false,
-    braceEffectOn = "",
-    i = { },
-    blocks = [
-      { opening: "{", closing: "}" },
-      { opening: "(", closing: ")" },
-      { opening: "[", closing: "]" },
-      { opening: "|", closing: "|" },
-      { opening: "\\{", closing: "\\}" },
-      { opening: "\\|", closing: "\\|" },
-      { opening: "\\left{", closing: "\\right}" },
-      { opening: "\\left(", closing: "\\right)" },
-      { opening: "\\left[", closing: "\\right]" },
-      { opening: "\\left|", closing: "\\right|" },
-    ],
-    stats= []
-  ;
-  //#endregion
+  var braceEffect = /^(\^|_|\\frac|\\sqrt)/;
+  var braceImportant = false;
+  var braceEffectOn = '';
+  var i = { };
+  var blocks = [
+    { opening: '{', closing: '}' },
+    { opening: '(', closing: ')' },
+    { opening: '[', closing: ']' },
+    { opening: '|', closing: '|' },
+    { opening: '\\{', closing: '\\}' },
+    { opening: '\\|', closing: '\\|' },
+    { opening: '\\left{', closing: '\\right}' },
+    { opening: '\\left(', closing: '\\right)' },
+    { opening: '\\left[', closing: '\\right]' },
+    { opening: '\\left|', closing: '\\right|' }
+  ];
+  var stats = [];
 
-  function closeBLock(){
+  // #endregion
+
+  function closeBLock () {
 
   }
 
-  Object.defineProperty(i,"value", {
-    get(){
+  Object.defineProperty(i, 'value', {
+    get () {
       return this.__value;
     },
-    set(v){
+    set (v) {
       this.__value = v;
-      this.__changed = true; 
+      this.__changed = true;
     }
   });
   i.__value = 0;
@@ -54,7 +54,7 @@ module.exports = function checkBlocks(input, deletes) {
         // such as the frac and the sum, braceImportant is one after
         // the sum or the square brackets, if we find another bracket
         // important that mean that there is as error
-        let location = peg$computeLocation(last.i, i);
+        const location = peg$computeLocation(last.i, i);
         error(`${m} is unexpected after `, location);
       }
       braceImportant = 1;
@@ -62,13 +62,13 @@ module.exports = function checkBlocks(input, deletes) {
       i += m.length;
     });
 
-    for (let b of blocks) {
+    for (const b of blocks) {
       let last;
-      if(stats.length) last = stats[stats.length - 1];
+      if (stats.length) last = stats[stats.length - 1];
 
       if (b.opening === b.closing) {
         // this is true for opening and closing the block
-        if (input.slice(i, i + b.opening.length) === b.opening /* || b.closing */ ) {
+        if (input.slice(i, i + b.opening.length) === b.opening /* || b.closing */) {
           if (last && last.b === b) {
             closeBLock();
           } else {
@@ -78,28 +78,24 @@ module.exports = function checkBlocks(input, deletes) {
           }
           i += b.opening.length; break;
         }
-      }
-      
-      else if (input.slice(i, i + b.opening.length) === b.opening) {
+      } else if (input.slice(i, i + b.opening.length) === b.opening) {
         stats.push({
           b, i, braceImportant, braceEffectOn
         });
         i += b.opening.length; break;
-      }
-      
-      else if (input.slice(i, i + b.closing.length) === b.closing) {
-        let last = stats[stats.length - 1];
+      } else if (input.slice(i, i + b.closing.length) === b.closing) {
+        const last = stats[stats.length - 1];
         if (last.b !== b) {
-          let location = peg$computeLocation(last.i, i);
+          const location = peg$computeLocation(last.i, i);
           error(`"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`, location);
         }
-        if (last.b.opening === "{") {
+        if (last.b.opening === '{') {
           /// it has effect with frac sqrt ^ _
           if (!last.braceImportant) {
 
           }
-        } else if (last.b.opening === "[") {
-          if (last.braceImportant && last.braceEffectOn === "\\sqrt") {
+        } else if (last.b.opening === '[') {
+          if (last.braceImportant && last.braceEffectOn === '\\sqrt') {
             braceImportant = 2;
           }
         }
@@ -108,17 +104,16 @@ module.exports = function checkBlocks(input, deletes) {
       }
     }
 
-    if(!i.__changed){
+    if (!i.__changed) {
       i.value++;
     }
     i.__changed = false;
   }
 
   if (stats.length > 0) {
-    let location = peg$computeLocation(last.i, i - 1);
+    const location = peg$computeLocation(last.i, i - 1);
     error(`"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`, location);
   }
 
   return input;
-
 };
