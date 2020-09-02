@@ -1,7 +1,8 @@
 const texParser = require('./lib/');
-const checkBlock = require('./src/prepareInput.js');
-let tex = process.argv[process.argv.indexOf('--tex') + 1];
-
+const prepareInput = require('./src/prepareInput.js');
+let tex = "1  \n+2\\frac {1} \n {2 \n}";
+// tex = "1\t\n+2*x_{1}\\sqrt[someting^here] {1 } ^ {2}";
+tex = "1*2!-5^3 \cdot\frac{1}2!";
 
 function parse() {
   console.log('parsing:', tex);
@@ -28,21 +29,17 @@ function parse() {
   }
 }
 
-function logCheckBlock(){
-  console.log('testing check block function >>>>>>>>>>>>>>');
+function log(fn, ...args){
+  console.log('start >>>>>>>>>>>>>>');
   console.log('===============');
-  console.log(checkBlock(tex));
+  console.log(tex);
   console.log('===============');
-  console.log('done: testing check block function !');
+  console.time(prepareInput.name + ' is done after');
+  console.log(fn(...args));
+  console.log('===============');
+  console.timeEnd(prepareInput.name + ' is done after');
 }
 
-function log() {
-  console.log('testing tex parser >>>>>>>>>>>>>>');
-  console.log('===============');
-  console.log(JSON.stringify(parse(tex), null, 2));
-  console.log('===============');
-  console.log('tex parser test done!');
-}
+log(prepareInput, tex);
 
-logCheckBlock(tex);
 // log();
