@@ -38,6 +38,7 @@ const grammarFiles = [
     dependencies: {
       Node: './texParserNode.js',
       version: './version.js',
+      prepareInput: './prepareInput.js',
     }
   }
 ];
