@@ -13,7 +13,7 @@
         "artanh", "arasinh", "aracosh", "aratanh",
       ],
           
-    builtInNames: [
+    builtInControlSeq: [
       "alpha", "Alpha", "beta", "Beta", "gamma", "Gamma", "pi", "Pi", "varpi", "phi", "Phi",
       "varphi", "mu", "theta", "vartheta", "epsilon", "varepsilon", "upsilon", "Upsilon",
       "zeta", "eta", "Lambda", "lambda", "kappa", "omega", "Omega", "psi", "Psi",
@@ -23,20 +23,22 @@
       "Zeta", "Eta", "Theta", "Iota", "Kappa", "Mu", "Nu", "Omicron", "Rho", "Tau", "Chi"
     ],
 
+    builtInFunctions: [ // the same as the rul builtInFuncsTitles
+      "sinh", "cosh", "tanh", 
+      "sin", "cos", "tan", "sec", "csc", "cot",
+      "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot",
+      "ln"
+    ]
+
   }, options); /// override the default options
 
+  // these are the latex control sequences used outside the
+  // Factor rule,,, you can notice they are used as operators
   var ignoreSpacialSymbols = [
     "approx", "leq", "geq", "neq", "gg", "ll",
-    "notin", "ni", "in", "cdot"
+    "notin", "ni", "in", "cdot", "right"
   ];
 
-  var builtInFunctions = [ // the same as the rul builtInFuncsTitles
-    "sinh", "cosh", "tanh", 
-    "sin", "cos", "tan", "sec", "csc", "cot",
-    "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot",
-    "ln"
-  ];
-    
   let rawInput = input; 
 
   text = function() {
@@ -52,6 +54,20 @@
       location: location()
     }
     return n;
+  }
+
+  function check(value, rule) {
+    if (rule instanceof Array) {
+      for (let i=0; i<rule.length; i++) {
+        if (check(value, rule[i])) return true;  
+      }
+    } else if (rule instanceof Function) {
+      return rule(value, location());
+    } else if (rule instanceof RegExp) {
+      return rule.test(value);
+    } else {
+      return value === rule;
+    }
   }
 
 }
@@ -144,11 +160,11 @@ simpleFactor = // for operation5Simple
   Name / TexEntities /* \theta, \sqrt{x}, \int, ... */
 
 Delimiter
-  = head:Expression tail:(_ "," _ (Expression))* _{
+  = head:Expression tail:(_ "," _ Expression)* {
       if (tail.length){
         return createNode("delimiter", [head].concat(tail.map(a => a[3])), { name: ',' });
       }
-      return [head];
+      return head;
     }
 
 Functions "functions" =
@@ -171,16 +187,20 @@ BuiltInFunctions =
 builtInFunctionsArg = Functions / BlockParentheses / operation4Simple
 
 Function = 
-  name:$Name &{ return options.functions.indexOf(name)>-1; } _ parentheses:BlockParentheses 
-  { return createNode('function', parentheses, { name }); }
+  name:$Name &{ return check(name, options.functions); } _ parentheses:BlockParentheses 
+  { return createNode('function', [parentheses], { name }); }
 
 BlockParentheses =
-  args:("(" s:Delimiter ")" {return s;} / "\\left(" s:Delimiter "\\right)" {return s;})
-  { return createNode('block', [args], '()'); }
+  data:(
+    "(" s:Delimiter ")" {return ["()", s];} /
+    "\\left"_"(" s:Delimiter "\\right"_")" {return ["\\left(\\right)", s];}
+  ) { return createNode('block', [data[1]], { name: data[0] }); }
 
 Block_VBars =
-  expr:("|" e:Expression "|" {return e;} / "\\left|" e:Expression "\\right|" {return e;})
-  { return createNode('block', [expr], '||') }
+  data:(
+    "|" e:Expression "|" {return ["||", e];} /
+    "\\left"_"|" e:Expression "\\right"_"|" {return ["\\left|\\right|", e];}
+  ) { return createNode('block', [data[1]], { name: data[0] }); }
 
 ////// main factor, tokens
 
@@ -314,15 +334,15 @@ builtInFuncsTitles = // the same as builtInFunctions
   "ln"
 
 /// this may be operator, if so, don't consider as specialSymbol 
-specialSymbolsTitles = a:[a-z]i+ &{ return ignoreSpacialSymbols.indexOf(a.join('')) === -1 }
+specialSymbolsTitles = a:[a-z]i+ &{ return !check(a.join(''), ignoreSpacialSymbols); }
   {
     let name = text();
-    if(options.builtInNames.indexOf(name)>-1) return name;
-    if (
-      builtInFunctions.indexOf(name) > -1 ||
-      options.functions.indexOf(name) > -1 ||
-      (['sqrt', 'int', 'sum', 'prod']).indexOf(name) > -1
-    ) {
+    if(check(name, options.builtInControlSeq)) return name;
+    if (check(name, [
+        options.builtInFunctions,
+        options.functions,
+        ['sqrt', 'int', 'sum', 'prod']
+    ])) {
       error(`"${name}" is used with no arguments arguments! it can't be used as variable!`);
     }
     error('undefined control sequence "' + name + '"');

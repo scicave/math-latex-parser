@@ -249,12 +249,22 @@ describe("test prepareInput function", () => {
   });
 });
 
-describe("test parse function", () => {
-  describe("should parse basic arithmetic", () => {
-    map.basic.forEach((t) => {
-      test(t.tex, () => {
-        expect(parse(t.tex)).toHaveStructure(t.struct);
+function doTest(on, title) {
+  describe(title, ()=>{
+    if (on instanceof Array) {
+      on.forEach((t) => {
+        test(t.tex, () => {
+          expect(parse(t.tex, t.parseOptions)).toHaveStructure(t.struct);
+        });
       });
-    });
+    } else if (typeof on === 'object') {
+      for (let p in on) {
+        doTest(on[p], p);
+      }
+    } else { 
+      throw new Error('can\'t do tests on ' + typeof on);
+    }
   });
-});
+}
+
+doTest(map, "test parse function");
