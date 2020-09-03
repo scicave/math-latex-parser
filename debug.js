@@ -1,8 +1,6 @@
 const texParser = require('./lib/');
 const prepareInput = require('./src/prepareInput.js');
-let tex = "1  \n+2\\frac {1} \n {2 \n}";
-// tex = "1\t\n+2*x_{1}\\sqrt[someting^here] {1 } ^ {2}";
-tex = "1*2!-5^3 \cdot\frac{1}2!";
+let tex = "\\sqrt\\frac{1}^{2}!";
 
 function parse() {
   console.log('parsing:', tex);
