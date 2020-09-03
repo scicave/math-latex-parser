@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2020-3-9
+### Added
+- Add files property in package.json to reduce the package size, and delete the development files.
+
 
 ## [1.1.0] - 2020-3-9
 ### Added
