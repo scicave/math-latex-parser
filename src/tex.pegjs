@@ -23,6 +23,13 @@
       "Zeta", "Eta", "Theta", "Iota", "Kappa", "Mu", "Nu", "Omicron", "Rho", "Tau", "Chi"
     ],
 
+    builtInFunctions: [ // the same as the rul builtInFuncsTitles
+      "sinh", "cosh", "tanh", 
+      "sin", "cos", "tan", "sec", "csc", "cot",
+      "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot",
+      "ln"
+    ]
+
   }, options); /// override the default options
 
   var ignoreSpacialSymbols = [
@@ -30,13 +37,6 @@
     "notin", "ni", "in", "cdot"
   ];
 
-  var builtInFunctions = [ // the same as the rul builtInFuncsTitles
-    "sinh", "cosh", "tanh", 
-    "sin", "cos", "tan", "sec", "csc", "cot",
-    "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot",
-    "ln"
-  ];
-    
   let rawInput = input; 
 
   text = function() {
@@ -52,6 +52,20 @@
       location: location()
     }
     return n;
+  }
+
+  function check(value, rule) {
+    if (rule instanceof Array) {
+      for (let i=0; i<rule.length; i++) {
+        if (check(value, rule[i])) return true;  
+      }
+    } else if (rule instanceof Function) {
+      return rule(value, location());
+    } else if (rule instanceof RegExp) {
+      return rule.test(value);
+    } else {
+      return value === rule;
+    }
   }
 
 }
@@ -314,15 +328,15 @@ builtInFuncsTitles = // the same as builtInFunctions
   "ln"
 
 /// this may be operator, if so, don't consider as specialSymbol 
-specialSymbolsTitles = a:[a-z]i+ &{ return ignoreSpacialSymbols.indexOf(a.join('')) === -1 }
+specialSymbolsTitles = a:[a-z]i+ &{ return !check(a.join(''), ignoreSpacialSymbols); }
   {
     let name = text();
-    if(options.builtInNames.indexOf(name)>-1) return name;
-    if (
-      builtInFunctions.indexOf(name) > -1 ||
-      options.functions.indexOf(name) > -1 ||
-      (['sqrt', 'int', 'sum', 'prod']).indexOf(name) > -1
-    ) {
+    if(check(name, options.builtInNames)) return name;
+    if (check(name, [
+        options.builtInFunctions,
+        options.functions,
+        ['sqrt', 'int', 'sum', 'prod']
+    ])) {
       error(`"${name}" is used with no arguments arguments! it can't be used as variable!`);
     }
     error('undefined control sequence "' + name + '"');
