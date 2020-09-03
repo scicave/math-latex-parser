@@ -22,5 +22,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fix
 
-- `\lef( [expression] \right)`: an error was thrown when we try to parse such an epxression, it considered right as control sequance name
+- `\lef( [expression] \right)`: an error was thrown when we try to parse such an expression, it considered right as control sequence name
 - Make the argument for BlockParentheses instance of Array
