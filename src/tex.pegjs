@@ -36,7 +36,7 @@
   // Factor rule,,, you can notice they are used as operators
   var ignoreSpacialSymbols = [
     "approx", "leq", "geq", "neq", "gg", "ll",
-    "notin", "ni", "in", "cdot",
+    "notin", "ni", "in", "cdot", "right"
   ];
 
   let rawInput = input; 
@@ -160,11 +160,11 @@ simpleFactor = // for operation5Simple
   Name / TexEntities /* \theta, \sqrt{x}, \int, ... */
 
 Delimiter
-  = head:Expression tail:(_ "," _ (Expression))* _{
+  = head:Expression tail:(_ "," _ Expression)* {
       if (tail.length){
         return createNode("delimiter", [head].concat(tail.map(a => a[3])), { name: ',' });
       }
-      return [head];
+      return head;
     }
 
 Functions "functions" =
@@ -187,16 +187,20 @@ BuiltInFunctions =
 builtInFunctionsArg = Functions / BlockParentheses / operation4Simple
 
 Function = 
-  name:$Name &{ return options.functions.indexOf(name)>-1; } _ parentheses:BlockParentheses 
-  { return createNode('function', parentheses, { name }); }
+  name:$Name &{ return check(name, options.functions); } _ parentheses:BlockParentheses 
+  { return createNode('function', [parentheses], { name }); }
 
 BlockParentheses =
-  args:("(" s:Delimiter ")" {return s;} / "\\left(" s:Delimiter "\\right)" {return s;})
-  { return createNode('block', [args], '()'); }
+  data:(
+    "(" s:Delimiter ")" {return ["()", s];} /
+    "\\left"_"(" s:Delimiter "\\right"_")" {return ["\\left(\\right)", s];}
+  ) { return createNode('block', [data[1]], { name: data[0] }); }
 
 Block_VBars =
-  expr:("|" e:Expression "|" {return e;} / "\\left|" e:Expression "\\right|" {return e;})
-  { return createNode('block', [expr], '||') }
+  data:(
+    "|" e:Expression "|" {return ["||", e];} /
+    "\\left"_"|" e:Expression "\\right"_"|" {return ["\\left|\\right|", e];}
+  ) { return createNode('block', [data[1]], { name: data[0] }); }
 
 ////// main factor, tokens
 
