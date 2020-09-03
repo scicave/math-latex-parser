@@ -13,7 +13,7 @@
         "artanh", "arasinh", "aracosh", "aratanh",
       ],
           
-    builtInNames: [
+    builtInControlSeq: [
       "alpha", "Alpha", "beta", "Beta", "gamma", "Gamma", "pi", "Pi", "varpi", "phi", "Phi",
       "varphi", "mu", "theta", "vartheta", "epsilon", "varepsilon", "upsilon", "Upsilon",
       "zeta", "eta", "Lambda", "lambda", "kappa", "omega", "Omega", "psi", "Psi",
@@ -32,9 +32,11 @@
 
   }, options); /// override the default options
 
+  // these are the latex control sequences used outside the
+  // Factor rule,,, you can notice they are used as operators
   var ignoreSpacialSymbols = [
     "approx", "leq", "geq", "neq", "gg", "ll",
-    "notin", "ni", "in", "cdot"
+    "notin", "ni", "in", "cdot",
   ];
 
   let rawInput = input; 
@@ -331,7 +333,7 @@ builtInFuncsTitles = // the same as builtInFunctions
 specialSymbolsTitles = a:[a-z]i+ &{ return !check(a.join(''), ignoreSpacialSymbols); }
   {
     let name = text();
-    if(check(name, options.builtInNames)) return name;
+    if(check(name, options.builtInControlSeq)) return name;
     if (check(name, [
         options.builtInFunctions,
         options.functions,
