@@ -43,8 +43,10 @@ Node.prototype.types = {
   BLOCK: 'block',
 
   FRAC: 'frac',
+  PROD: 'prod',
   INT: 'int',
   SUM: 'sum',
+  SQRT: 'sqrt',
   OPERATORNAME: 'operatorname'
 
 };

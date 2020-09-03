@@ -22,17 +22,20 @@
       "gimel", "comicron", "iota", "delta", "thetasym", "omicron", "Delta", "Epsilon",
       "Zeta", "Eta", "Theta", "Iota", "Kappa", "Mu", "Nu", "Omicron", "Rho", "Tau", "Chi"
     ],
-    texOperators1: [
-      "approx", "leq", "geq", "neq", "gg", "ll", "notin", "ni", "in"
-    ],
-    builtInFunctions: [ // the same as the rul builtInFuncsTitles
-      "sinh", "cosh", "tanh", 
-      "sin", "cos", "tan", "sec", "csc", "cot",
-      "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot",
-      "ln"
-    ]
+
   }, options); /// override the default options
 
+  var ignoreSpacialSymbols = [
+    "approx", "leq", "geq", "neq", "gg", "ll",
+    "notin", "ni", "in", "cdot"
+  ];
+
+  var builtInFunctions = [ // the same as the rul builtInFuncsTitles
+    "sinh", "cosh", "tanh", 
+    "sin", "cos", "tan", "sec", "csc", "cot",
+    "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot",
+    "ln"
+  ];
     
   let rawInput = input; 
 
@@ -87,7 +90,7 @@ Operation3 "operation or factor" =
   }
 
 Operation4 "operation or factor" =
-  head:(Operation5) tail:(_ (operation5WithoutNumber))* {
+  head:(Operation5) tail:(_ operation5WithoutNumber)* {
     if(options.autoMult){
       return tail.reduce(function(result, element) {
         return createNode("automult" , [result, element[1]]);
@@ -194,8 +197,8 @@ Sqrt = "\\sqrt" !char _
         exp:SquareBrackets? _
         arg:Arg
   {
-    exp = exp || new Node('number', null, { value:2 });
-    return createNode("function", [arg, exp], { name:'sqrt', isBuiltIn:true });
+    // exp = exp || createNode("number", null, {value:2});
+    return exp ? createNode("sqrt", [arg, exp]) : createNode("sqrt", [arg]);
   }
 
 Integeral = "\\" n:("int" / "sum" / "prod") !char _
@@ -257,7 +260,7 @@ sign
 //////           //////
 
 Name "name" = (
-    mini_name sub:(_ "_" _ ("{" _ w(w/s)* "}" / w))?
+    mini_name (_ "_" _ ("{" _ w(w/s)* _ "}" / w))?
   ) {
     let name = text().replace(/[\s\{\}]*/g, ''); 
     return createNode('id', null, {name})
@@ -304,24 +307,25 @@ factorial = "!"
 //////           //////
 // definitions
 
-builtInFuncsTitles = // the same as options.builtInFunctions
+builtInFuncsTitles = // the same as builtInFunctions
   "sinh"      / "cosh"    / "tanh"    / 
   "sin"       / "cos"     / "tan"     / "sec"     / "csc"     / "cot"     /
   "arcsin"    / "arccos"  / "arctan"  / "arcsec"  / "arccsc"  / "arccot"  /
   "ln"
 
 /// this may be operator, if so, don't consider as specialSymbol 
-specialSymbolsTitles = a:[a-z]i+ &{ return options.texOperators1.indexOf(a.join('')) === -1 }
+specialSymbolsTitles = a:[a-z]i+ &{ return ignoreSpacialSymbols.indexOf(a.join('')) === -1 }
   {
     let name = text();
     if(options.builtInNames.indexOf(name)>-1) return name;
-    if(
-      options.builtInFunctions.indexOf(name) > -1 ||
+    if (
+      builtInFunctions.indexOf(name) > -1 ||
       options.functions.indexOf(name) > -1 ||
-      (['sqrt', 'int', 'sum', 'prod']).indexOf(name) > -1){
+      (['sqrt', 'int', 'sum', 'prod']).indexOf(name) > -1
+    ) {
       error(`"${name}" is used with no arguments arguments! it can't be used as variable!`);
     }
-    error('undefined name "' + name + '"');
+    error('undefined control sequence "' + name + '"');
   }
   
 
