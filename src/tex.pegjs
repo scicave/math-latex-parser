@@ -23,7 +23,7 @@
       "Zeta", "Eta", "Theta", "Iota", "Kappa", "Mu", "Nu", "Omicron", "Rho", "Tau", "Chi"
     ],
 
-    builtInFunctions: [ // the same as the rul builtInFuncsTitles
+    builtInFunctions: [
       "sinh", "cosh", "tanh", 
       "sin", "cos", "tan", "sec", "csc", "cot",
       "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot",
@@ -327,11 +327,7 @@ factorial = "!"
 //////           //////
 // definitions
 
-builtInFuncsTitles = // the same as builtInFunctions
-  "sinh"      / "cosh"    / "tanh"    / 
-  "sin"       / "cos"     / "tan"     / "sec"     / "csc"     / "cot"     /
-  "arcsin"    / "arccos"  / "arctan"  / "arcsec"  / "arccsc"  / "arccot"  /
-  "ln"
+builtInFuncsTitles = "\\" name:[a-z]i+ !char &{ return check(name.join(''), options.builtInFunctions); }
 
 /// this may be operator, if so, don't consider as specialSymbol 
 specialSymbolsTitles = a:[a-z]i+ &{ return !check(a.join(''), ignoreSpacialSymbols); }
