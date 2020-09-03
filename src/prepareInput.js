@@ -35,6 +35,13 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
 
   function closeBLock (b) {
     let last = stats.pop();
+
+    // on some cases like: 1+2 \\sqrt{\\farc{1}}
+    if (argsNeeded) {
+      let location = peg$computeLocation(i.value, i.value);
+      error(`${argsFor} needs ${ argsNeeded === 1 ? "an argument" : argsNeeded + " argumets" }`, location);
+    }
+
     // we are exiting independent expression in side a block
     // continuting in another independent block or the originame input
     // in both cases, here below may be assigning for argsFor and argsNeeded
@@ -47,7 +54,6 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       if (!last.argsNeeded) {
         // handling the unimportant braces or throw error if
         // contains some invalid expression
-        console.log('handling unimportant braces');
         input =
           input.substring(0, last.i) + ' ' +
           input.substring(last.i + 1, i.value) + ' ' +
@@ -96,9 +102,26 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
   for (; i.value < input.length;) {
 
     input.slice(i.value, -1).replace(argsNeededTest, m => {
+
+      // tex = " \\frac\\sqrt{1}{2}!"; in such a tex input, there would be error, but 
+      // tex = " \\sqrt\\frac{1}{2}!"; will still the same and will be parsed
+      // tex = " \\sqrt\\frac{1}_{2}!"; 
+      // tex = " \\sqrt\\frac{1}^{2}!"; 
+      // in the previous two cases, an error must be thrown
+
+      let a = argsNeeded === 2 ? "a" : "another";
+      let location;
+      if (
+        (argsNeeded && argsFor === '\\frac' && (m === '^' || m === '_')) ||
+        (argsNeeded && argsFor === '\\frac' && m === '\\sqrt')
+      ) { location = peg$computeLocation(i.value, i.value); }
+      if (location) error(`expected ${a} group after \\frac, but found "${m}"`, location);
+
       argsNeeded = m === '\\frac' ? 2 : 1;
       argsFor = m;
       i.value += m.length; // consume the matched text
+      skipConsuming = true;
+
     });
 
     // loop through the input, open and close blocks using hereinabove functions
@@ -115,8 +138,8 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       } else if (input.slice(i.value, i.value + b.opening.length) === b.opening) {
         openBLock(b); break; // stop blocks the for loop
       } else if (input.slice(i.value, i.value + b.closing.length) === b.closing) {
-        if (last.b !== b) {
-          const location = peg$computeLocation(last.i, i.value);
+        if (!last || last.b !== b) {
+          const location = peg$computeLocation(i.value, i.value);
           error(`"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`, location);
         }
         closeBLock(b);
@@ -133,7 +156,7 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
   if (stats.length > 0) {
     let last = stats.pop();
     // this will throw reference error if the module used standalone
-    const location = peg$computeLocation(last.i, i.value - 1);
+    const location = peg$computeLocation(i.value, i.value);
     // this will throw syntax error in the built commonjs module
     error(`"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`, location);
   }
