@@ -14,49 +14,24 @@ const {parse} = require('@scicave/math-latex-parser');
 
 console.log(parse('12+3^6x \\frac 1 {5+3}'));
 /*
-  You ge some thing like this
-  Notice: this is just a prototype, the result is more verbose.
+You ge some thing like this
 
-  {
-    "name": "+",
-    "type": "operator",
-    "args": [
-      12,
-      {
-        "type": "automult",
-        "args": [
-          {
-            "type": "automult",
-            "args": [
-              {
-                "name": "^",
-                "type": "operator",
-                "args": [
-                  3,
-                  6
-                ]
-              },
-              "x"
-            ]
-          },
-          {
-            "type": "frac",
-            "args": [
-              1,
-              {
-                "name": "+",
-                "type": "operator",
-                "args": [
-                  5,
-                  3
-                ]
-              }
-            ]
-          }
-        ]
-      }
-    ]
-  }
+      (+)
+      /\
+     /  \
+    12  (automult)
+           /\
+          /  \
+         /    \
+        /      \
+(automult)     (frac)
+    /\            /\
+   /  \          /  \
+ (^)   x         1  (+)
+  /\                 /\ 
+ /  \               /  \
+3    6             5    3
+    
 */
 ```
 
