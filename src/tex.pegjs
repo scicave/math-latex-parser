@@ -211,7 +211,7 @@ SpecialSymbols = "\\" name:specialSymbolsTitles !char {
   return createNode('id', null, {name, isBuiltIn:true})
 }
 
-SpecialTexRules = Sqrt / Integeral / Frac
+SpecialTexRules = Sqrt / IntSumProd / Frac
 
 Sqrt = "\\sqrt" !char _
         exp:SquareBrackets? _
@@ -221,13 +221,14 @@ Sqrt = "\\sqrt" !char _
     return exp ? createNode("sqrt", [arg, exp]) : createNode("sqrt", [arg]);
   }
 
-Integeral = "\\" n:("int" / "sum" / "prod") !char _
+IntSumProd = "\\" n:("int" / "sum" / "prod") !char _
         subsup:(
-          sub:SubScript? _ sup:SuperScript? { return [sub, sup]; } /
+          &(_ "_") sub:SubScript? _ sup:SuperScript? { return [sub, sup]; } /
           sup:SuperScript? _ sub:SubScript? { return [sub, sup]; }
         ) _ arg:Expression
   {
-    return createNode(n, [...subsup, arg]);
+    subsup.push(arg);
+    return createNode(n, subsup);
   }
 
 Frac = "\\frac" !char _ 
@@ -236,11 +237,11 @@ Frac = "\\frac" !char _
 
 ///////////////////
 
-SuperScript "superscript"= "^" _ arg:(Arg) {return arg;}
+SuperScript "superscript" = "^" _ arg:(Arg) {return arg;}
 
-SubScript "subscript"= "_" _ arg:(Arg) {return arg;}
+SubScript "subscript" = "_" _ arg:(Arg) {return arg;}
 
-Arg "function argument"= CurlyBrackets / Frac / SpecialSymbols / oneCharArg
+Arg "function argument" = CurlyBrackets / Frac / SpecialSymbols / oneCharArg
 
 oneCharArg "digit or char" = [a-z0-9]i {
     let txt = text();

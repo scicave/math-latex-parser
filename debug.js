@@ -1,6 +1,6 @@
 const texParser = require('./lib/');
 const prepareInput = require('./src/prepareInput.js');
-let tex = "\\sqrt\\frac{1}^{2}!";
+let tex = `a+ \\frac 1 {5+3} \\int 12`;
 
 function parse() {
   console.log('parsing:', tex);
@@ -38,6 +38,6 @@ function log(fn, ...args){
   console.timeEnd(prepareInput.name + ' is done after');
 }
 
-log(prepareInput, tex);
+log(parse, tex);
 
 // log();

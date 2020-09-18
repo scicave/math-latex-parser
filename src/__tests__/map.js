@@ -1,28 +1,37 @@
-
 let tests = {
   basic: [
     {
       tex: "1+2",
       struct: {
-        type: "operator", name: "+",
+        type: "operator",
+        name: "+",
         args: [1, 2],
       },
     },
     {
       tex: "1*2!-5^3",
       struct: {
-        type: "operator", name: "-",
+        type: "operator",
+        name: "-",
         args: [
           {
-            type: "operator", name: "*",
-            args: [ 1, {
-              type: "operator", operatorType: "postfix", name: "!",
-              args: [2]
-            }],
+            type: "operator",
+            name: "*",
+            args: [
+              1,
+              {
+                type: "operator",
+                operatorType: "postfix",
+                name: "!",
+                args: [2],
+              },
+            ],
           },
           {
-            type: "operator", operatorType: "infix", name: "^",
-            args: [5, 3]
+            type: "operator",
+            operatorType: "infix",
+            name: "^",
+            args: [5, 3],
           },
         ],
       },
@@ -30,140 +39,264 @@ let tests = {
     {
       tex: "1*2!-5^3 \\cdot\\frac{1}2!",
       struct: {
-        type: "operator", name: "-",
+        type: "operator",
+        name: "-",
         args: [
           {
-            type: "operator", name: "*",
+            type: "operator",
+            name: "*",
             args: [
               1,
               {
-                type: "operator", operatorType: "postfix", name: "!",
-                args: [2]
-              }
+                type: "operator",
+                operatorType: "postfix",
+                name: "!",
+                args: [2],
+              },
             ],
           },
           {
-            type: "operator", operatorType: "infix", name: "cdot",
+            type: "operator",
+            operatorType: "infix",
+            name: "cdot",
             args: [
               {
-                type: "operator", operatorType: "infix", name: "^",
-                args: [5, 3]
+                type: "operator",
+                operatorType: "infix",
+                name: "^",
+                args: [5, 3],
               },
               {
-                type: "operator", operatorType: "postfix", name: "!",
-                args: [{
-                  type: "frac",
-                  args: [1, 2]
-                }]
-              }
-            ]
+                type: "operator",
+                operatorType: "postfix",
+                name: "!",
+                args: [
+                  {
+                    type: "frac",
+                    args: [1, 2],
+                  },
+                ],
+              },
+            ],
           },
         ],
       },
-    }
+    },
   ],
+
   singleChar: {
-    autoMult: [
+    basic: [
       {
-        tex: '3^6cd\\sqrt af',
+        tex: `\\sum _ 1 ^\nx -5.6a+ b`,
         struct: {
-          "type": "automult",
-          "args": [
+          type: "sum",
+          args: [
+            1,
+            "x",
             {
-              "type": "automult",
-              "args": [
+              name: "+",
+              type: "operator",
+              args: [
                 {
-                  "type": "automult",
-                  "args": [
-                    {
-                      "type": "automult",
-                      "args": [
-                        {
-                          type: "operator", name: "^",
-                          args: [ 3, 6 ]
-                        },
-                        "c"
-                      ]
-                    },
-                    "d"
-                  ]
+                  type: "automult",
+                  args: [-5.6, "a"],
                 },
-                { type: "sqrt", args: ["a"] }
-              ]
+                "b",
+              ],
             },
-            "f"
-          ]
-        }
+          ],
+        },
       },
       {
-        tex: '12+3^6x \\frac 1 {5+3}',
+        tex: `\\sum ^\tx _ 1 -5.6a+ b`,
         struct: {
-          "name": "+", "type": "operator",
-          "args": [
+          type: "sum",
+          args: [
+            1,
+            "x",
+            {
+              name: "+",
+              type: "operator",
+              args: [
+                {
+                  type: "automult",
+                  args: [-5.6, "a"],
+                },
+                "b",
+              ],
+            },
+          ],
+        },
+      },
+    ],
+    autoMult: [
+      {
+        tex: "3^6cd\\sqrt af",
+        struct: {
+          type: "automult",
+          args: [
+            {
+              type: "automult",
+              args: [
+                {
+                  type: "automult",
+                  args: [
+                    {
+                      type: "automult",
+                      args: [
+                        {
+                          type: "operator",
+                          name: "^",
+                          args: [3, 6],
+                        },
+                        "c",
+                      ],
+                    },
+                    "d",
+                  ],
+                },
+                { type: "sqrt", args: ["a"] },
+              ],
+            },
+            "f",
+          ],
+        },
+      },
+      {
+        tex: "12+3^6x \\frac 1 {5+3}",
+        struct: {
+          name: "+",
+          type: "operator",
+          args: [
             12,
             {
-              "type": "automult",
-              "args": [
+              type: "automult",
+              args: [
                 {
-                  "type": "automult",
-                  "args": [
+                  type: "automult",
+                  args: [
                     {
-                      "name": "^", "type": "operator",
-                      "args": [ 3, 6 ]
+                      name: "^",
+                      type: "operator",
+                      args: [3, 6],
                     },
-                    "x"
-                  ]
+                    "x",
+                  ],
                 },
                 {
-                  "type": "frac",
-                  "args": [
+                  type: "frac",
+                  args: [
                     1,
                     {
-                      "name": "+", "type": "operator",
-                      "args": [ 5, 3 ]
-                    }
-                  ]
-                }
-              ]
-            }
-          ]
-        }
-      }
-    ]
-  },
-  multiChar: {
-    autoMult: [
-
+                      name: "+",
+                      type: "operator",
+                      args: [5, 3],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        tex: "a+ \\frac 1 {5+3} \\int 12",
+        struct: {
+          name: "+",
+          type: "operator",
+          args: [
+            "a",
+            {
+              type: "automult",
+              args: [
+                {
+                  type: "frac",
+                  args: [
+                    1,
+                    {
+                      name: "+",
+                      type: "operator",
+                      args: [5, 3],
+                    },
+                  ],
+                },
+                {
+                  type: "int",
+                  args: [null, null, 12],
+                },
+              ],
+            },
+          ],
+        },
+      },
+      {
+        tex: "a+  \\int 12 \\frac 1 {5+3}",
+        struct: {
+          name: "+",
+          type: "operator",
+          args: [
+            "a",
+            {
+              type: "int",
+              args: [
+                null,
+                null,
+                {
+                  type: "automult",
+                  args: [
+                    12,
+                    {
+                      type: "frac",
+                      args: [1, { name: "+", type: "operator", args: [5, 3] }],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        },
+      },
     ],
+  },
+
+  multiChar: {
+    autoMult: [],
   },
 
   options: {
     functions: [
       {
         tex: `f(x)`,
-        parseOptions: { functions: 'f' },
+        parseOptions: { functions: "f" },
         struct: {
-          type: 'function', name: "f",
-          args: [{
-            type: 'block', name: "()",
-            args: ["x"]
-          }]
+          type: "function",
+          name: "f",
+          args: [
+            {
+              type: "block",
+              name: "()",
+              args: ["x"],
+            },
+          ],
         },
       },
       {
         tex: `f\\left(x\\right)`,
-        parseOptions: { functions: 'f' },
+        parseOptions: { functions: "f" },
         struct: {
-          type: 'function', name: "f",
-          args: [{
-            type: 'block', name: "\\left(\\right)",
-            args: ["x"]
-          }]
-        }
-      }
-    ]
-  }
-
+          type: "function",
+          name: "f",
+          args: [
+            {
+              type: "block",
+              name: "\\left(\\right)",
+              args: ["x"],
+            },
+          ],
+        },
+      },
+    ],
+  },
 };
 
 module.exports = tests;

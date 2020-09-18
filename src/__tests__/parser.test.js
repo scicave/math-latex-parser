@@ -24,6 +24,7 @@ expect.extend({
       function simplify(o) {
         JSON.stringify(o);
         if (typeof o !== "object") return o;
+        if (!o /** === null */) return o;
         if (o.type === "number") return o.value;
         else if (o.type === "id") return o.name;
         const r = o instanceof Array ? [] : {};
@@ -53,6 +54,7 @@ expect.extend({
     }
 
     function _check(n, s, nPath, sPath) {
+      if (!(n && s)) return;
       if (!isNaN(s)) {
         s = { type: "number", value: s };
       } else if (typeof s === "string") {

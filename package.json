@@ -34,8 +34,8 @@
     "prod": "npm run lint && npm run build && npm run test",
     "dev": "nodemon --watch src --watch tools --watch build.js --ignore src/version.js --exec \"npm run buildtest\"",
     "debug": "node debug.js",
-    "build:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/__tests__ --ignore src/version.js --exec \"npm run build\"",
-    "debug:watch": "nodemon --watch src --watch tools --watch build.js --watch debug.js --ignore src/__tests__ --ignore src/version.js --exec \"npm run debug\"",
+    "build:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/__tests__ --ignore src/version.js --exec \"npm run build && npm run debug\"",
+    "debug:watch": "nodemon --watch src --watch tools --watch build.js --watch debug.js --ignore src/__tests__ --ignore src/version.js --exec \"npm run build && npm run debug\"",
     "test:watch": "jest ./src/__tests__/parser.test.js --watch",
     "preversion": "npm run prod"
   },
