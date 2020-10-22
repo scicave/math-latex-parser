@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.1.1] - 2020-3-9
+## [1.2.0] - 2020-10-22
+### Fix
+- Catch error more precisely when unexpected block closing char found 
+
+
+## [1.1.1] - 2020-9-3
 ### Added
 - Add files property in package.json to reduce the package size, and delete the development files.
 
 
-## [1.1.0] - 2020-3-9
+## [1.1.0] - 2020-9-3
 ### Added
 - Tests for the basic arithmetics and autoMult option
 - Tests for options.functions
