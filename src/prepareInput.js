@@ -107,7 +107,7 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       // tex = " \\sqrt\\frac{1}{2}!"; will still the same and will be parsed
       // tex = " \\sqrt\\frac{1}_{2}!"; 
       // tex = " \\sqrt\\frac{1}^{2}!"; 
-      // in the previous two cases, an error must be thrown
+      // in the previous last two cases, an error must be thrown
 
       let a = argsNeeded === 2 ? "a" : "another";
       let location;
@@ -138,9 +138,13 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       } else if (input.slice(i.value, i.value + b.opening.length) === b.opening) {
         openBLock(b); break; // stop blocks the for loop
       } else if (input.slice(i.value, i.value + b.closing.length) === b.closing) {
-        if (!last || last.b !== b) {
+        if (last && last.b !== b) {
           const location = peg$computeLocation(i.value, i.value);
           error(`"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`, location);
+        } else if (!last || stats.filter(_=>_.b === b).length === 0) {
+          const location = peg$computeLocation(i.value, i.value);
+          // closing with out opening
+          error(`block "${b.opening}" is not found before!`, location);
         }
         closeBLock(b);
         break; // stop the blocks for loop
