@@ -14,30 +14,25 @@
     "url": "https://github.com/scicave/math-latex-parser/issues"
   },
   "homepage": "https://github.com/scicave/math-latex-parser#readme",
-  "watch": {
-    "buildtest": {
-      "patterns": [
-        "src"
-      ],
-      "ignore": "src/index.js",
-      "quiet": true,
-      "delay": 2500,
-      "runOnChangeOnly": false
-    }
-  },
   "scripts": {
     "prebuild": "node ./tools/generate-version-file.js",
     "build": "node build.js",
     "buildtest": "npm run build && npm run test",
-    "test": "jest ./src/__tests__/parser.test.js",
+    "test": "jest ./tests/parser.test.js",
     "lint": "eslint ./src/ --fix",
     "prod": "npm run lint && npm run build && npm run test",
-    "dev": "nodemon --watch src --watch tools --watch build.js --ignore src/version.js --exec \"npm run buildtest\"",
     "debug": "node debug.js",
-    "build:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/__tests__ --ignore src/version.js --exec \"npm run build && npm run debug\"",
-    "debug:watch": "nodemon --watch src --watch tools --watch build.js --watch debug.js --ignore src/__tests__ --ignore src/version.js --exec \"npm run build && npm run debug\"",
-    "test:watch": "jest ./src/__tests__/parser.test.js --watch",
+    "build:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/__tests__ --ignore src/version.js -e js,pegjs -x npm run build && npm run debug",
+    "debug:watch": "nodemon --watch src --watch tools --watch build.js --watch debug.js --ignore src/__tests__ --ignore src/version.js -e js,pegjs -x npm run build && npm run debug",
+    "test:watch": "jest ./tests/parser.test.js --watch",
     "preversion": "npm run prod"
+  },
+  "jest": {
+    "verbose": true,
+    "moduleNameMapper": {
+      "parser": "<rootDir>/lib/index.js",
+      "prepareInput": "<rootDir>/lib/prepareInput.js"
+    }
   },
   "keywords": [
     "parser",
