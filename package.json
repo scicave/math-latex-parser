@@ -1,6 +1,6 @@
 {
   "name": "@scicave/math-latex-parser",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "A mathematical parser for latex in math mode. We mean by mathematical that, arithmetic operations is considered for example if you pass \"1+2\", the result would by a (add node \"+\") with two children nodes of type number.",
   "main": "./lib/index.js",
   "files": [
@@ -25,7 +25,8 @@
     "build:watch": "nodemon --watch src --watch tools --watch build.js --ignore src/__tests__ --ignore src/version.js -e js,pegjs -x npm run build && npm run debug",
     "debug:watch": "nodemon --watch src --watch tools --watch build.js --watch debug.js --ignore src/__tests__ --ignore src/version.js -e js,pegjs -x npm run build && npm run debug",
     "test:watch": "jest ./tests/parser.test.js --watch",
-    "preversion": "npm run prod"
+    "preversion": "npm run prod",
+    "postversion": "npm run build"
   },
   "jest": {
     "verbose": true,
