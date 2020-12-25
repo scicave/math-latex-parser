@@ -41,6 +41,17 @@ You can also pass options to the parse function:
 console.log(parse(tex, options));
 ```
 
+# Contribute
+
+See `(package.json).scripts`.
+
+```sh
+❯ npm install
+❯ npm run build:watch
+# open another terminal:
+❯ npm run test:watch
+```
+
 # Options
 
 ## autoMult: boolean
