@@ -7,16 +7,6 @@ module.exports = [
   },
 
   {
-    tex: "\\sin x",
-    struct: node.BIF("sin", ['x']),
-  },
-
-  {
-    tex: "\\sin(x)",
-    struct: node.BIF("sin", [node.block("()", ['x'])]),
-  },
-
-  {
     tex: "1*2!-5^3",
     struct: node.op('-', [
       node.op('*', [ 1, node.pOP('!', [2]) ]),
