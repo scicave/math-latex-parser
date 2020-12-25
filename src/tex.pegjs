@@ -172,7 +172,7 @@ Functions "functions" =
 
 BuiltInFunctions =
   "\\" name:(
-    n:builtInFuncsTitles !char {return n;} /
+    n:builtInFuncsTitles {return n;} /
     "operatorname" _ n:("{" _ n:OperatorName "}" {return n;} / !char char){
       if(!options.operatorNames.indexOf(n)>-1)
         error("function name \"" + n + "\" is invalid!");
@@ -184,7 +184,7 @@ BuiltInFunctions =
     else return createNode("operator", [func, exp], { name: '^', operatorType: 'infix' });
   }
 
-builtInFunctionsArg = Functions / BlockParentheses / operation4Simple
+builtInFunctionsArg = Functions / Block_VBars / BlockParentheses / operation4Simple
 
 Function = 
   name:$Name &{ return check(name, options.functions); } _ parentheses:BlockParentheses 
@@ -328,7 +328,10 @@ factorial = "!"
 //////           //////
 // definitions
 
-builtInFuncsTitles = "\\" name:[a-z]i+ !char &{ return check(name.join(''), options.builtInFunctions); }
+builtInFuncsTitles = name:(char+ { return text(); })
+  &{ return check(name, options.builtInFunctions); } {
+    return name;
+  }
 
 /// this may be operator, if so, don't consider as specialSymbol 
 specialSymbolsTitles = a:[a-z]i+ &{ return !check(a.join(''), ignoreSpacialSymbols); }
