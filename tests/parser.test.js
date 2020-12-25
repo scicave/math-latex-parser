@@ -1,9 +1,7 @@
 // TODO: add more tests
 
-const path = require("path");
-const pkg = require(path.resolve(process.cwd(), "package.json"));
-const parser = require(path.resolve(process.cwd(), pkg.main));
-const prepareInput = require("../prepareInput.js");
+const parser = require('parser');
+const prepareInput = require("prepareInput");
 const quite = 0; // no struct or node logged when a test fails
 const map = require("./map.js");
 
@@ -154,9 +152,9 @@ describe("test prepareInput function", () => {
   describe("should return the same input when braces are important", () => {
     it("tests \\frac", () => {
       let tex;
-      tex = "1  \n+2\\frac {  1} \t2"; // \frac {} -
+      tex = "1  \n+2\\frac {  1} \t2"; // \frac {} ---
       expect(prepare(tex)).toBe(tex);
-      tex = "1  \n+2\\frac 1 \n {2}"; // \frac - {}
+      tex = "1  \n+2\\frac 1 \n {2}"; // \frac --- {}
       expect(prepare(tex)).toBe(tex);
       tex = "1  \n+2\\frac {  1} \n {2}"; // \frac {} {}
       expect(prepare(tex)).toBe(tex);
@@ -213,7 +211,9 @@ describe("test prepareInput function", () => {
 
     tex = "\\frac\\sqrt{1}{2 +x}!";
     test("Throw an error: " + tex, () => {
-      // ReferenceError not SyntaxError as we don't pass pegjs special function to prepareInput
+      // ReferenceError not SyntaxError as we don't pass 
+      // `peg$computeLocation`, and `error` functions to prepare
+      // in actual parsing process, they are passed
       try {
         prepare(tex);
       } catch (e) {
@@ -224,7 +224,6 @@ describe("test prepareInput function", () => {
 
     tex = "\\sqrt\\frac{1}_{2}!";
     test("Throw an error: " + tex, () => {
-      // ReferenceError not SyntaxError as we don't pass pegjs special function to prepareInput
       try {
         prepare(tex);
       } catch (e) {
@@ -235,7 +234,6 @@ describe("test prepareInput function", () => {
 
     tex = "\\sqrt\\frac{1}^{2}!";
     test("Throw an error: " + tex, () => {
-      // ReferenceError not SyntaxError as we don't pass pegjs special function to prepareInput
       try {
         prepare(tex);
       } catch (e) {
@@ -245,19 +243,35 @@ describe("test prepareInput function", () => {
     });
 
     tex = " \\sqrt\\frac{1}{2}!";
-    test("Stay the same" + tex, () => {
+    test("Stay the same: " + tex, () => {
       expect(prepare(tex)).toBe(tex);
     });
   });
 });
 
+function tAsTitle(t) {
+  // return tex.replace(/\n/g, '\\n');
+  return (t.error ? "should throw: " : "should parse: ") + JSON.stringify(t.tex);
+}
+
+// we tests similar to json, but js object, stored in `map`
+// if the property is array, then this is array of tests to do using `jest.test`
+// otherwise this is a group to do to pack insige `jest.descripe` 
 function doTest(on, title) {
   describe(title, ()=>{
     if (on instanceof Array) {
       on.forEach((t) => {
-        test(t.tex, () => {
-          expect(parse(t.tex, t.parseOptions)).toHaveStructure(t.struct);
-        });
+        let title = tAsTitle(t);
+        let fn = () => {
+          if (t.error) 
+            expect(()=>parse(t.tex, t.parseOptions)).toThrow();
+          else
+            expect(parse(t.tex, t.parseOptions)).toHaveStructure(t.struct);
+        };
+        if (t.only) 
+          test.only(title, fn);
+        else
+          test(title, fn);
       });
     } else if (typeof on === 'object') {
       for (let p in on) {
