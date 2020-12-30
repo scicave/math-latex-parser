@@ -2,7 +2,7 @@
 
 const parser = require('parser');
 const quite = 0; // no struct or node logged when a test fails
-const map = require("./map.js");
+const map = require("./maps");
 
 expect.extend({
   /**
@@ -58,8 +58,8 @@ expect.extend({
         s = { type: "id", name: s };
       }
 
-      if (!(struct instanceof Object)) {
-        return failed(`"struct" is type of ${typeof struct}, toHaveStructure checks the match between parser.Node and object.`, node);
+      if (!(s instanceof Object)) {
+        return failed(`"struct" is type of ${typeof s}, toHaveStructure checks the match between parser.Node and object.`, node);
       }
 
       nPath = (nPath ? nPath + "." : "") + n.type;
@@ -101,23 +101,25 @@ function tAsTitle(t) {
   return (t.error ? "should throw: " : "should parse: ") + JSON.stringify(t.tex);
 }
 
-// we tests similar to json, but js object, stored in `map`
-// if the property is array, then this is array of tests to do using `jest.test`
-// otherwise this is a group to do to pack insige `jest.descripe` 
+// our tests js object, stored in `map`
+// if the property is array, then this 
+// is array of tests to do using `jest.test`
+// otherwise this is a group to do to pack
+// insige `jest.describe` 
 function doTest(on, title) {
   describe(title, ()=>{
     if (on instanceof Array) {
       on.forEach((t) => {
-        let title = tAsTitle(t);
+        let title = t.title || tAsTitle(t);
         let fn = () => {
           if (t.error) 
-            expect(()=>parser.parse(t.tex, t.parseOptions)).toThrow();
+            expect(()=>parser.parse(t.tex, t.parseOptions)).toThrow(t.errorType);
           else
             expect(parser.parse(t.tex, t.parseOptions)).toHaveStructure(t.struct);
         };
         if (t.only) 
           test.only(title, fn);
-        else
+        else if(!t.skip)
           test(title, fn);
       });
     } else if (typeof on === 'object') {
