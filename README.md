@@ -1,6 +1,8 @@
 # math-latex-parser
 A mathematical parser for latex in math mode. We mean by mathematical that, arithmetic operations are considered. For example, if you pass "1+2", the result would by a (add node "+") with two children nodes of type number.
 
+**See also:** [math-parser](https://github.com/scicave/math-parser)
+
 # Install
 
 ```
