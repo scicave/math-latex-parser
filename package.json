@@ -1,7 +1,7 @@
 {
   "name": "@scicave/math-latex-parser",
   "version": "1.2.1",
-  "description": "A mathematical parser for latex in math mode. We mean by mathematical that, arithmetic operations is considered for example if you pass \"1+2\", the result would by a (add node \"+\") with two children nodes of type number.",
+  "description": "A mathematical (La)TeX parser.",
   "main": "./lib/index.js",
   "files": [
     "lib"
