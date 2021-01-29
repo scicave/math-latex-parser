@@ -36,9 +36,10 @@ const grammarFiles = [
     input: './src/tex.pegjs',
     output: './lib/index.js',
     dependencies: {
-      Node: './texParserNode.js',
+      Node: './Node.js',
       version: './version.js',
       prepareInput: './prepareInput.js',
+      merge: "./merge.js",
     }
   }
 ];

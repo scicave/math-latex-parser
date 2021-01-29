@@ -1,6 +1,6 @@
 const texParser = require('./lib/');
 const prepareInput = require('./src/prepareInput.js');
-let tex = `a+ \\frac 1 {5+3} \\int 12`;
+let tex = process.env.tex || `a+ \\frac 1 {5+3} \\int 12`;
 
 function parse() {
   console.log('parsing:', tex);
