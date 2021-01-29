@@ -1,18 +1,23 @@
 // TODO: parse comments such as % for commenting line  
+// TODO: Parse MemberExpression
+// TODO: sets, { 1,2, ...,3 }
+// TODO: tuples, ( 1,2, , , ...,3 )
+// TODO: intervals, [1, 2)
+// TODO: matrices, \begin{bmatrix} 1 & 2 & 3 \end{bmatrix}
 
 {
   
-  options = Object.assign({
+  options = merge({
     autoMult: true,
     functions: [],
     singleCharName: true,
-    operatorNames: // this is for something like this: \operatorname{floor}
-      [
-        "floor", "ceil", "round", "random", "factorial",
-        "sech", "csch", "coth", "abs", "arsinh", "arcosh",
-        "artanh", "arasinh", "aracosh", "aratanh",
-      ],
-          
+    /* operatorNames: // this is for something like this: \operatorname{floor} */
+    /*   [ */
+    /*     "floor", "ceil", "round", "random", "factorial", */
+    /*     "sech", "csch", "coth", "abs", "arsinh", "arcosh", */
+    /*     "artanh", "arasinh", "aracosh", "aratanh", */
+    /*   ], */
+
     builtInControlSeq: [
       "alpha", "Alpha", "beta", "Beta", "gamma", "Gamma", "pi", "Pi", "varpi", "phi", "Phi",
       "varphi", "mu", "theta", "vartheta", "epsilon", "varepsilon", "upsilon", "Upsilon",
@@ -62,7 +67,7 @@
         if (check(value, rule[i])) return true;  
       }
     } else if (rule instanceof Function) {
-      return rule(value, location());
+      return rule(value);
     } else if (rule instanceof RegExp) {
       return rule.test(value);
     } else {

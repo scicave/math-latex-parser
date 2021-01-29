@@ -14,7 +14,7 @@ module.exports = [
 
   {
     tex: `f(x)`,
-    parseOptions: { functions: "f" },
+    parserOptions: { functions: "f" },
     struct: node.F("f",[
       node.block("()", ["x"]),
     ]),
@@ -22,7 +22,7 @@ module.exports = [
 
   {
     tex: `f\\left(x\\right)`,
-    parseOptions: { functions: "f" },
+    parserOptions: { functions: "f" },
     struct: node.F("f",[
       node.block("\\left(\\right)", ["x"]),
     ]),

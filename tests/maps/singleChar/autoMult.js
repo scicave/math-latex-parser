@@ -1,4 +1,4 @@
-const { node } = require('./utils');
+const { node } = require('../utils');
 
 module.exports = [
 

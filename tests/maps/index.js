@@ -1,38 +1,22 @@
 const basic = require('./basic');
-const autoMult = require('./autoMult');
-const functions = require('./functions');
-const { node } = require('./utils');
+const options__functions = require('./functions');
+const singleChar__autoMult = require('./singleChar/autoMult');
+const singleChar__basic = require('./singleChar/basic');
+const multiChar__autoMult = require("./multiChar/autoMult");
 
 let tests = {
   basic,
 
   singleChar: {
-
-    basic: [
-      {
-        tex: `\\sum _ 1 ^\nx -5.6a+ b`,
-        struct: node.sum([1,'x',
-          node.op('+', [ node.am([-5.6,'a']), 'b' ])
-        ]),
-      },
-      {
-        tex: `\\sum ^\tx _ 1 -5.6a+ b`,
-        struct: node.sum([1,'x',
-          node.op('+', [ node.am([-5.6,'a']), 'b' ])
-        ]),
-      },
-    ],
-
-    autoMult,
+    basic: singleChar__basic,
+    autoMult: singleChar__autoMult,
   },
 
   multiChar: {
-    autoMult: [],
+    autoMult: multiChar__autoMult,
   },
 
-  options: {
-    functions,
-  },
+  options__functions,
 };
 
 module.exports = tests;

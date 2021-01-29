@@ -1,5 +1,3 @@
-/* eslint-disable no-undef, no-unused-vars */
-
 /**
  * the main purpose of this function is to remove some brace "{}" that has np effect on the parse process
  */
