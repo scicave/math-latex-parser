@@ -69,6 +69,7 @@ Node.types = {
   NUMBER: 'number',
   ID: 'id',
   FUNCTION: 'function',
+  MEMBER_EXPRESSION: 'member expression',
 
   OPERATOR: 'operator',
   AUTO_MULT: 'automult',

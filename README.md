@@ -33,7 +33,7 @@ See `(package.json).scripts`.
 
 ```sh
 ❯ npm install
-❯ npm run start # watch and built
+❯ npm start # watch and built
 ❯ # open another terminal:
 ❯ npm run test:watch # test after builing
 ```
@@ -158,6 +158,8 @@ Type = `Array<`[Checker](#checker)`>`, default:
 ]
 ```
 
+If you want to expand the defaults put `"..."` as the first item in the array, at index `0`.
+
 ### .builtInFunctions
 
 Type = `Array<`[Checker](#checker)`>`, default:
@@ -169,6 +171,8 @@ Type = `Array<`[Checker](#checker)`>`, default:
   "arccsc", "arccot", "ln"
 ]
 ```
+
+If you want to expand the defaults put `"..."` as the first item in the array, at index `0`.
 
 ### .extra
 

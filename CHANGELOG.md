@@ -1,15 +1,17 @@
 # Changelog
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
-
 
 ## [2.0.0] - Unreleased
 
 ### Breaking
 
 - Remove `options.operatorNames`, all names inside `\operatorname` are valid, you have to do extra validations if you want.
+- Remove `options.singleCharName`, latex conventionally uses single-char name for constants and variables.
+- Rename `builtIn`, the `I` into `i` in all places. For example `options.buitInControlSeq` into `options.builtinControlSeq`.
 
 ### Added
 
@@ -18,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New AST Node `"member expression"`.
 - New AST Node `"set"`.
 - New AST Node `"tuple"`.
+- `"..."`, at the beginning of options array that has default value of type `Checker`. This ellipsis will put the default ones. 
 
 ## [1.2.1] - 2020-10-25
 
@@ -29,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fix
 
-- Catch error more precisely when unexpected block closing char found 
+- Catch error more precisely when unexpected block closing char found
 
 ## [1.1.1] - 2020-9-3
 
