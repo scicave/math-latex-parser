@@ -30,7 +30,7 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
     { opening: "\\|", closing: "\\|" },
   ];
 
-  let blockPrefixesReg = /^(\\left|\\right|\\begin|\\end|\\big|\\Big|\\bigg|\\Bigg)/;
+  let blockPrefixesReg = /^(\\left|\\right|\\begin|\\end|\\bigg|\\Bigg|\\big|\\Big)/;
 
   // #endregion
 
@@ -48,6 +48,11 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
         location
       );
     }
+
+    // -------------------
+    //      CASE 1
+    // -------------------
+
 
     if (last.state.prefix === "\\begin") {
       blockStack.push({ isBegin: true, i: i.value });
@@ -71,19 +76,35 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       // new we habe begin-end block
     }
 
+    // -------------------
+    //      CASE 2
+    // -------------------
+
     let msg;
+    
     // un matched prefixes, `\\left {  \\right}`
     if (state.prefix && !b.prefixed)
       msg = `unexpected "${b.closing}" after "${state.prefix}"`;
-    else if (last.state.prefix === "left" && state.prefix !== "\\right")
-      msg = `expected "\\right" but "${state.prefix}" found`;
+    else if (last.state.prefix === "\\left") {
+      if (state.prefix !== "\\right")
+        msg = `expected "\\right"${state.prefix ? ` but "${state.prefix}" found` : ""}`;
+    }
     else if (state.prefix !== last.state.prefix)
-      msg = `expected "${last.state.prefix}" but "${state.prefix}" found`;
+      msg = `expected "${last.state.prefix}"${state.prefix ? ` but "${state.prefix}" found` : ""}`;
+    else if (state.prefix) {
+      Object.assign(state, defaultState);
+      i.value += b.closing.length; // consume the closing char
+      return;
+    }
 
     if (msg) {
       let location = peg$computeLocation(i.value, i.value);
       error(msg, location);
     }
+
+    // -------------------
+    //      CASE 3
+    // -------------------
 
     // we are exiting to the parent block
     // we have to restore defaults
@@ -113,7 +134,6 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       }
     }
 
-    // finally do the following stuff
     i.value += b.closing.length; // consume the closing char
   }
 

@@ -4,6 +4,9 @@
 // TODO: tuples, ( 1,2, , , ...,3 )
 // TODO: intervals, [1, 2)
 // TODO: matrices, \begin{bmatrix} 1 & 2 & 3 \end{bmatrix}
+// TODO: IDs decoration: `\vec{F}`,`\dot{a}`
+// TODO: IDs decoration: `\vec{F}`,`\dot{a}`
+// TODO: 3 dots: `1 + ... + 4` or => `1 + \sdot\sdot\sdot + 4`
 
 {
   {
@@ -40,6 +43,20 @@
       keepParen: false,
       builtinControlSeq: defaultConSeq,
       builtinFunctions: defaultBIFs,
+      extra: {
+        memberExpressions: true,
+        sets: true,
+        matrices: true,
+        tuples: true,
+        intervals: true,
+        ellipsis: {
+          funcArgs: true,
+          sets: true,
+          matrices: true,
+          tuples: true,
+          infixOperators: true
+        }
+      }
     };
 
     options = merge(defaultOptions, options); /// override the default options
@@ -59,7 +76,10 @@
     "notin", "ni", "in", "cdot", "right"
   ];
 
-  let rawInput = input; 
+  let rawInput = input,
+      // does commaExpression contains ellipsis
+      // it has to be LIFO stack, push and pop
+      doesCMCE = [];
 
   text = function() {
     return rawInput.substring(peg$savedPos, peg$currPos);
@@ -93,14 +113,14 @@
 
 Expression "expression" = _ expr:Operation0 _ { return expr; }
 
-Operation0 "operation or factor" = 
+Operation0 = 
   head:Operation1 tail:(_ "=" _ Operation1)* _{
     return tail.reduce(function(result, element) {
       return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
   }
 
-Operation1 "operation or factor" = 
+Operation1 = 
   head:Operation2 tail:(_ ("\\" title:texOperators1 !char { return title }) _ Operation2)* _{
     return tail.reduce(function(result, element) {
       return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
@@ -110,22 +130,22 @@ Operation1 "operation or factor" =
 /// the same as options.texOperators1
 texOperators1 = w:word &{ return w in infixOperatorsConSeq } { return w }
 
-Operation2 "operation or factor" =
+Operation2 =
   head:Operation3 tail:(_ ("+" / "-") _ Operation3)* {
     return tail.reduce(function(result, element) {
       return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
   }
 
-Operation3 "operation or factor" =
+Operation3 =
   head:Operation4 tail:(_ ("*" / "/" / "\\cdot" !char { return "cdot"; }) _ Operation4)* {
     return tail.reduce(function(result, element) {
       return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
   }
 
-Operation4 "operation or factor" =
-  head:(Operation5) tail:(_ operation5WithoutNumber)* {
+Operation4 =
+  head:(Operation5) tail:(_ Operation5WithoutNumber)* {
     if(options.autoMult){
       return tail.reduce(function(result, element) {
         return createNode("automult" , [result, element[1]]);
@@ -135,8 +155,8 @@ Operation4 "operation or factor" =
     }
   }
 
-operation4Simple "operation or factor" = // for builtinFunctionsArg
-  head:(operation5Simple) tail:(_ operation5Simple)* {
+Operation4Simple = // for builtinFunctionsArg
+  head:(Operation5Simple) tail:(_ Operation5Simple)* {
     if(options.autoMult){
       return tail.reduce(function(result, element) {
         return createNode("automult" , [result, element[1]]);
@@ -146,86 +166,168 @@ operation4Simple "operation or factor" = // for builtinFunctionsArg
     }
   }
   
-Operation5 "operation or factor" =
+Operation5 =
   base:Factor _ exp:SuperScript? _ fac:factorial? {
     if (exp) base = new Node("operator", [base, exp], { name: '^', operatorType: 'infix' });
     if (fac) base = new Node("operator", [base], { name: '!', operatorType: 'postfix' });
     return base;
   }
 
-operation5WithoutNumber "operation or factor" =
-  base:factorNotNumber _ exp:SuperScript? _ fac:factorial? {
+Operation5WithoutNumber =
+  base:FactorNotNumber _ exp:SuperScript? _ fac:factorial? {
     if (exp) base = new Node("operator", [base, exp], { name: '^', operatorType: 'infix' });
     if (fac) base = new Node("operator", [base], { name: '!', operatorType: 'postfix' });
     return base;
   }
 
-operation5Simple = // for operation4Simple
-  base:simpleFactor _ exp:SuperScript? _ fac:factorial? {
+Operation5Simple = // for Operation4Simple
+  base:SimpleFactor _ exp:SuperScript? _ fac:factorial? {
     if (exp) base = new Node("operator", [base, exp], { name: '^', operatorType: 'infix' });
     if (fac) base = new Node("operator", [base], { name: '!', operatorType: 'postfix' });
     return base;
   }
 
 Factor
-  = factorNotNumber / Number
+  = FactorNotNumber / Number
 
-factorNotNumber =
-  MemberExpression / Functions / BlockParentheses / Block_VBars /
-  Name / TexEntities
+FactorNotNumber =
+  // member expression may be a name or a function
+  MemberExpression /
+  TupleOrExprOrParenOrIntervalOrSetOrMatrix /
+  Block_VBars / TexEntities
 
-simpleFactor = // for operation5Simple
-  Number/ Block_VBars /* || === abs() */ /
+SimpleFactor = // for operation5Simple
+  Number / Block_VBars /* |{expr}| === abs() */ /
   Name / TexEntities /* \theta, \sqrt{x}, \int, ... */
 
-Delimiter
-  = head:Expression tail:(_ "," _ Expression)* {
-      if (tail.length){
-        return createNode("delimiter", [head].concat(tail.map(a => a[3])), { name: ',' });
-      }
-      return head;
-    }
+Block_VBars =
+  ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\left") _ "|"
+  e:Expression
+  ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\right") _ "|"
+  {
+    return createNode("abs", [e]);
+  }
+
+// -----------------------------------
+//            functions
+// -----------------------------------
 
 Functions "functions" =
-  BuiltInFunctions / Function
+  BuiltInFunctions / Operatorname / Function
 
-BuiltInFunctions =
+BuiltInFunctions "builtin functions" =
   "\\" name:builtinFuncsTitles
   _ exp:SuperScript? _ args:builtinFunctionsArgs
   {
-    if (!Array.isArray(args)) args =
+    if (!Array.isArray(args)) args = [args];
     let func = new Node('function', args, {name, isBuiltIn:true});
     if(!exp) return func;
     else return createNode("operator", [func, exp], { name: '^', operatorType: 'infix' });
-  } /
-  "\\operatorname" _ n:$("{" _ $Name _ "}" / ws char) _ arg:functionParentheses {
-    let opname = n.replace(/\s*/g, '');
-    return createNode("operatorname", [arg])
   }
 
 builtinFuncsTitles =
   name:word
-  &{ return check(name, options.builtinFunctions) } {
+  &{ return check(name, options.builtinFunctions) }
+  {
     return name;
   }
 
-builtinFunctionsArgs = Functions / Block_VBars / functionParentheses / operation4Simple
+builtinFunctionsArgs = Functions / Block_VBars / functionParentheses / Operation4Simple
+
+Operatorname "\\operatorname" =
+  "\\operatorname" _
+  n:$("{" _ $Name _ "}" / ws char) _
+  arg:functionParentheses
+  {
+    let opname = n.replace(/\s*/g, '');
+    return createNode("operatorname", [arg])
+  }
 
 Function = 
-  name:$Name &{ return check(name, options.functions); } _ parentheses:BlockParentheses 
-  { return createNode('function', [parentheses], { name }); }
+  name:$Name
+  &{ return check(name, options.functions) } _
+  args:functionParentheses
+  { return createNode('function', [args], { name }); }
 
-BlockParentheses =
-  data:(
-    "(" s:Delimiter ")" {return ["()", s];} /
-    "\\left"_"(" s:Delimiter "\\right"_")" {return ["\\left(\\right)", s];}
-  ) { return createNode('block', [data[1]], { name: data[0] }); }
+functionParentheses =
+  &{ doesCMCE.push(false); return true }
+  // open parenthese
+  ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\left")? _ "("
+  // function actual args
+  a:CommaExpression // there is spaces around it, not need for _ 
+  // close parenthese
+  ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\right")? _ ")"
+  {
+    let __doesCMCE = doesCMCE.pop();
+    let ellipsis = options.extra.ellipsis;
+    let ellipsisAllowed = typeof ellipsis === 'object' ? ellipsis.funcArgs : ellipsis;
+    if (__doesCMCE && !ellipsisAllowed)
+      error('ellipsis is not allowed to be an arg in a function');
+    return a;
+  }
+  /
+  // fallback when the previous grammar doesn't match
+  &{ doesCMCE.pop(); return true }
+  "(" _ ")" { return [] }; 
 
-Block_VBars =
-  data:(
-    "|" e:Expression "|" {return ["||", e];} /
-    "\\left"_"|" e:Expression "\\right"_"|" {return ["\\left|\\right|", e];}
-  ) { return createNode('block', [data[1]], { name: data[0] }); }
+// there is spaces around expressions already no need for _ rule
+CommaExpression =
+  head:(Expression / CommaExpressionEllipsis)
+  tail:("," a:(Expression / CommaExpressionEllipsis) { return a })*
+  {
+    if (tail.length) {
+      tail.unshift(head);
+      return tail;
+    }
+    if (head.type === 'ellipsis')
+      error("can't use ellipsis as a stand-alone expression");
+    return head;
+  }
+
+// put spaces around '...' here, use it directly there
+Ellipsis =
+  _ type:("..."/ "\\" t:dots { return t }) _
+  { return createNode("ellipsis", null, { type }) }
+
+// put spaces around '...' here, use it directly there
+HorizentalEllipsis =
+  _ type:("..." / "\\" t:("dots" / "cdots") { return t }) _
+  { return createNode("ellipsis", null, { type }) }
+
+dots = "dots" / "vdots" / "ddots" / "cdots"
+
+CommaExpressionEllipsis = e:Ellipsis {
+  doesCMCE[doesCMCE.length - 1] = true;
+  return e;
+}
+
+// -----------------------------------
+//        brackets expression
+// -----------------------------------
+
+TupleOrExprOrParenOrIntervalOrSetOrMatrix =
+  o:$blockOpeningsss
+  // reset then continue
+  &{ doesCMCE = false; return true }
+  arr2dOr1dArrOrExpr:CommaExpression
+  c:$blockClosingsss
+  {
+    let remreg = /\s*\\([bB]igg?|left|right)/g
+    o = o.replace(remreg, '');
+    c = c.replace(remreg, '');
+    return handleBlock(arr2dOr1dArrOrExpr, o, c);
+  }
+
+blockOpeningsss = blockOpenings /
+  ("\\left" / "\\Big" / "\\Bigg" / "\\big" / "\\bigg") _
+  blockOpenings
+
+blockClosingsss = blockOpenings /
+  ("\\left" / "\\Big" / "\\Bigg" / "\\big" / "\\bigg") _
+  blockOpenings
+
+blockOpenings = "(" / "[" / "{"
+blockClosings = ")" / "]" / "}"
 
 ////// main factor, tokens
 
@@ -316,8 +418,8 @@ Name "name" =
   }
 
 subName =
-  _ "_" _ w:w { return w } /
-  _ "_" _ "{" _ n:name _ "}" { return n }
+  _ "_" _ w:w { return createNode("id", null, { name: w }) } /
+  _ "_" _ "{" _ n:Name _ "}" { return n }
 
 w "letter or number"  = [a-zA-Z0-9]
 
@@ -336,10 +438,10 @@ Number "number"
   }
 
 simpleNumber "number"
-  = (num:[0-9]([0-9]/s)* frac? / frac)
+  = (num:[0-9]([0-9]/ws)* frac? / frac)
 
 frac
-  = "." _ [0-9]([0-9]/s)*
+  = "." _ [0-9]([0-9]/ws)*
 
 sign
   = '-' / '+'
@@ -362,9 +464,8 @@ Arg "function argument" = CurlyBrackets / Frac / SpecialSymbols / oneCharArg
 
 factorial = "!" 
 
-nl "newline" = "\n" / "\r\n"
-sp "space or tab"= [ \t]
-ws "whitespace" = nl / sp
-escapedSpace = "\\ "
-_ "whitespace"
-  = ws*
+nl "newline"      = "\n" / "\r\n"
+sp "space or tab" = " "  / "\t"
+escapedSpace      = "\\ "
+ws "whitespace"   = nl / sp / escapedSpace
+_ "whitespace"    = ws*
