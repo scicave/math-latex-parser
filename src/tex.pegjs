@@ -7,6 +7,10 @@
 // TODO: IDs decoration: `\vec{F}`,`\dot{a}`
 // TODO: IDs decoration: `\vec{F}`,`\dot{a}`
 // TODO: 3 dots: `1 + ... + 4` or => `1 + \sdot\sdot\sdot + 4`
+/**
+ * Pegjs rules of the major significant parts of the exression are __PascalCased__
+ * The helper rules are __camelCased__
+ */
 
 {
   {
@@ -73,7 +77,7 @@
   let rawInput = input,
       // does commaExpression contains ellipsis
       // it has to be LIFO stack, push and pop
-      doesCMCE = [];
+      doesContainEllipsis = [];
 
   text = function() {
     return rawInput.substring(peg$savedPos, peg$currPos);
@@ -83,9 +87,43 @@
 
   function createNode(...args){
     let n = new Node(...args);
+    let ellipsis = options.extra.ellipsis;
+    let __doesContainEllipsis = doesContainEllipsis.length && doesContainEllipsis.pop();
+    if(!options.autoMult && n.type === "automult")
+      error('invalid syntax, hint: missing * sign');
+    if (n.type === "member expression" && !options.extra.memberExpressions)
+      error(`tuples syntax is not allowed`);
+    if (n.type === "tuple") {
+      if (!options.extra.tuples)
+        error('tuples syntax is not allowed');
+      let ellipsisAllowed = typeof ellipsis === 'object' ? ellipsis.tuples : ellipsis;
+      if (__doesContainEllipsis && !ellipsisAllowed)
+        error('ellipsis is not allowed to be in tuples');
+    }
+    if (n.type === "set") {
+      if (!options.extra.sets)
+        error('sets syntax is not allowed');
+      let ellipsisAllowed = typeof ellipsis === 'object' ? ellipsis.sets : ellipsis;
+      if (__doesContainEllipsis && !ellipsisAllowed)
+        error('ellipsis is not allowed to be in sets');
+    }
+    if (n.type === "matrix") {
+      if (!options.extra.matrices)
+        error('matrices syntax is not allowed');
+      let ellipsisAllowed = typeof ellipsis === 'object' ? ellipsis.matrices : ellipsis;
+      if (__doesContainEllipsis && !ellipsisAllowed)
+        error('ellipsis is not allowed to be in matrices');
+    }
+    if (n.type === "interval") {
+      if (!options.extra.intervals)
+        error('intervals syntax is not allowed');
+      let ellipsisAllowed = typeof ellipsis === 'object' ? ellipsis.intervals : ellipsis;
+      if (__doesContainEllipsis && !ellipsisAllowed)
+        error('ellipsis is not allowed to be in intervals');
+    }
     n.match = {
+      location: location(),
       text: text(),
-      location: location()
     }
     return n;
   }
@@ -102,6 +140,72 @@
     } else {
       return value === rule;
     }
+  }
+
+  function handleBlock(node, o, c) {
+
+    // node is expr or 1d array or 2d array
+    // validation, [), (], {}, [], () are allowed
+    if (
+      o === '[' && c === "}" ||
+      o === '{' && c === "]" ||
+      o === '(' && c === "}" ||
+      o === '{' && c === ")"
+    ) error(`unexpected closing for the block`);
+
+    // // set
+    // if (Array.isArray(node) && Array.isArray(node[0])) {
+    //   if (o === "[" && c === "]") {
+    //     // matrix
+    //     let rows = node.length, cols = node[0].length;
+    //     for (let n of node)
+    //       if (n.length !== cols)
+    //         error("matrix has different column sizes");
+    //     return createNode("matrix", node, { shape: [ rows, cols ] });
+    //   }
+    //   error("unexpected \";\" separetor in a block " + `"${o}${c}"`);
+    // }
+
+    // // now node is 1d array or expr
+
+    // // sets
+    // if (o === "{") { // c is "}"
+    //   // set with one item
+    //   return createNode("set", Array.isArray(node) ? node: [node]);
+    // }
+
+    // // tuple or interval or set
+    // if (Array.isArray(node)) {
+    //   if (node.length === 2 && options.extra.intervals)
+    //     // make sure not have ellpsis
+    //     if (node[0].type !== "ellipsis" &&
+    //         node[1].type !== "ellipsis") {
+    //           return createNode("interval", node, { startInclusive: o==="[", endInclusive: c==="]" });
+    //         }
+    //   // matrix
+    //   if (o === "[" && c === "]") 
+    //     return createNode("matrix", [node]);
+    //   // all possible expressions for "[]" are consumed here
+    //   if (o === "[" || c === "]") error(`unexpected closing for the block`);
+    //   if (node.length === 2 && !options.extra.tuples)
+    //     return error("neither tuples nor intervals are allowed");
+    //   return createNode("tuple", node);
+    // }
+
+    // // now node is expr
+
+    // // it is matrix
+    // if (o === "[" && c === "]")
+    //   return createNode("matrix", [[node]]);
+
+    // // extra validation, we are now dealing with "()"
+    // if (o === "[" || c === "]")
+    //   error(`unexpected brackets opening and closing`);
+
+    return options.keepParen
+      ? createNode("parentheses", [node])
+      : node;
+
   }
 }
 
@@ -142,26 +246,11 @@ Operation3 =
 
 Operation4 =
   head:(Operation5) tail:(_ Operation5WithoutNumber)* {
-    if(options.autoMult){
-      return tail.reduce(function(result, element) {
-        return createNode("automult" , [result, element[1]]);
-      }, head);
-    } else {
-      error('invalid syntax, hint: missing * sign');
-    }
+    return tail.reduce(function(result, element) {
+      return createNode("automult" , [result, element[1]]);
+    }, head);
   }
 
-Operation4Simple = // for builtinFunctionsArg
-  head:(Operation5Simple) tail:(_ Operation5Simple)* {
-    if(options.autoMult){
-      return tail.reduce(function(result, element) {
-        return createNode("automult" , [result, element[1]]);
-      }, head);
-    } else {
-      error('invalid syntax, hint: missing * sign');
-    }
-  }
-  
 Operation5 =
   base:Factor _ exp:SuperScript? _ fac:factorial? {
     if (exp) base = new Node("operator", [base, exp], { name: '^', operatorType: 'infix' });
@@ -176,25 +265,14 @@ Operation5WithoutNumber =
     return base;
   }
 
-Operation5Simple = // for Operation4Simple
-  base:SimpleFactor _ exp:SuperScript? _ fac:factorial? {
-    if (exp) base = new Node("operator", [base, exp], { name: '^', operatorType: 'infix' });
-    if (fac) base = new Node("operator", [base], { name: '!', operatorType: 'postfix' });
-    return base;
-  }
-
 Factor
   = FactorNotNumber / Number
 
 FactorNotNumber =
   // member expression may be a name or a function
   MemberExpression /
-  TupleOrExprOrParenOrIntervalOrSetOrMatrix /
-  Block_VBars / TexEntities
-
-SimpleFactor = // for operation5Simple
-  Number / Block_VBars /* |{expr}| === abs() */ /
-  Name / TexEntities /* \theta, \sqrt{x}, \int, ... */
+  TupleOrExprOrParenOrIntervalOrSet /
+  Matrix/ Block_VBars / TexEntities
 
 Block_VBars =
   ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\left") _ "|"
@@ -228,7 +306,7 @@ builtinFuncsTitles =
     return name;
   }
 
-builtinFunctionsArgs = Functions / Block_VBars / functionParentheses / Operation4Simple
+builtinFunctionsArgs = functionParentheses / Operation4
 
 Operatorname "\\operatorname" =
   "\\operatorname" _
@@ -246,7 +324,7 @@ Function =
   { return createNode('function', [args], { name }); }
 
 functionParentheses =
-  &{ doesCMCE.push(false); return true }
+  &{ doesContainEllipsis.push(false); return true }
   // open parenthese
   ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\left")? _ "("
   // function actual args
@@ -254,16 +332,16 @@ functionParentheses =
   // close parenthese
   ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\right")? _ ")"
   {
-    let __doesCMCE = doesCMCE.pop();
+    let __doesContainEllipsis = doesContainEllipsis.pop();
     let ellipsis = options.extra.ellipsis;
     let ellipsisAllowed = typeof ellipsis === 'object' ? ellipsis.funcArgs : ellipsis;
-    if (__doesCMCE && !ellipsisAllowed)
+    if (__doesContainEllipsis && !ellipsisAllowed)
       error('ellipsis is not allowed to be an arg in a function');
     return a;
   }
   /
   // fallback when the previous grammar doesn't match
-  &{ doesCMCE.pop(); return true }
+  &{ doesContainEllipsis.pop(); return true }
   "(" _ ")" { return [] }; 
 
 // there is spaces around expressions already no need for _ rule
@@ -293,7 +371,7 @@ HorizentalEllipsis =
 dots = "dots" / "vdots" / "ddots" / "cdots"
 
 CommaExpressionEllipsis = e:Ellipsis {
-  doesCMCE[doesCMCE.length - 1] = true;
+  doesContainEllipsis[doesContainEllipsis.length - 1] = true;
   return e;
 }
 
@@ -301,31 +379,34 @@ CommaExpressionEllipsis = e:Ellipsis {
 //        brackets expression
 // -----------------------------------
 
-TupleOrExprOrParenOrIntervalOrSetOrMatrix =
-  o:$blockOpeningsss
+TupleOrExprOrParenOrIntervalOrSet =
+  o:blockOpeningsss
   // reset then continue
-  &{ doesCMCE = false; return true }
-  arr2dOr1dArrOrExpr:CommaExpression
-  c:$blockClosingsss
+  &{ doesContainEllipsis.push(false); return true }
+  arr1dOrExpr:CommaExpression
+  c:blockClosingsss
   {
     let remreg = /\s*\\([bB]igg?|left|right)/g
     o = o.replace(remreg, '');
     c = c.replace(remreg, '');
-    return handleBlock(arr2dOr1dArrOrExpr, o, c);
+    return handleBlock(arr1dOrExpr, o, c);
   }
+  // fallback action, pop the last item
+  / &{ doesContainEllipsis.pop(); return false } "a"
 
-blockOpeningsss = blockOpenings /
-  ("\\left" / "\\Big" / "\\Bigg" / "\\big" / "\\bigg") _
-  blockOpenings
+blockOpeningsss =
+  leftPrefixes? _
+  a:("(" / "[" / "{" / "\\]" / "\\}")
+  { return a.length === 2 ? a[1] : a; }
 
-blockClosingsss = blockOpenings /
-  ("\\left" / "\\Big" / "\\Bigg" / "\\big" / "\\bigg") _
-  blockOpenings
+blockClosingsss =
+  rightPrefixes? _
+  a:(")" / "]" / "}" / "\\]" / "\\}")
+  { return a.length === 2 ? a[1] : a; }
 
-blockOpenings = "(" / "[" / "{"
-blockClosings = ")" / "]" / "}"
-
-////// main factor, tokens
+// -----------------------------------
+//        backslash backslash
+// -----------------------------------
 
 TexEntities =
     SpecialTexRules / SpecialSymbols  
@@ -387,12 +468,44 @@ oneCharArg "digit or char" = w {
   } / SpecialSymbols;
 
 // -----------------------------------
+//           matrices
+// -----------------------------------
+
+Matrix = 
+  "\\begin" _ "{" _ t1:word _ "}" _
+  rows:matrixRows _
+  "\\end" _ "{" t2:word "}"
+  {
+    if(t1 !== t2)
+      error(`different titles: \\begin{${t1}} and \\end{${t2}}`);
+    if (!(t1 in [
+      "matrix", "pmatrix", "bmatrix",
+      "Bmatrix", "smallmatrix", "Bmatrix",
+      "vmatrix", "Vmatrix"
+    ]))
+    return createNode("matrix", rows, {type});
+  }
+
+matrixRows = 
+  head:matrixRow tail:(_ "\\\\" _ matrixRow)* {
+    tail.unshift(head);
+    return tail;
+  }
+
+matrixRow = 
+  head:Expression tail:(_ "&&" _ Expression)* {
+    tail.unshift(head);
+    return tail;
+  }
+
+
+// -----------------------------------
 //         member expressions
 // -----------------------------------
 
 MemberExpression =
   // left to right
-  head:memberArg tail:(_ "."  _ memberArg)* {
+  head:(memberArg / TupleOrExprOrParenOrIntervalOrSet) tail:(_ "."  _ memberArg)* {
     // reduce from left to right, ltr
     return tail.reduce(function(result, element) {
       return createNode("member expression" , [result, element[3]]);
@@ -454,6 +567,9 @@ SuperScript "superscript" = "^" _ arg:(Arg) {return arg;}
 SubScript "subscript" = "_" _ arg:(Arg) {return arg;}
 
 Arg "function argument" = CurlyBrackets / Frac / SpecialSymbols / oneCharArg
+
+leftPrefixes = ("\\left" / "\\Big" / "\\Bigg" / "\\big" / "\\bigg")
+rightPrefixes = ("\\right" / "\\Big" / "\\Bigg" / "\\big" / "\\bigg")
 
 // -----------------------------------
 //            primitives
