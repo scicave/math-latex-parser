@@ -17,14 +17,14 @@
   "scripts": {
     "build": "node build.js",
     "buildtest": "npm run build && npm run test",
-    "test": "jest ./tests",
+    "test": "jest",
     "lint": "eslint ./src/ --fix",
     "prod": "npm run lint && node generate-version-file.js && npm run build && npm run test",
     "debug": "node debug.js",
     "start": "npm run build:watch",
     "build:watch": "nodemon -w src -w tools -w build.js -i src/version.js -e js,pegjs -x 'npm run build'",
     "debug:watch": "nodemon -w src -w tools -w build.js -i src/version.js -e js,pegjs -x 'npm run build' -w debug.js -x 'npm run debug'",
-    "test:watch": "jest ./tests --watch",
+    "test:watch": "npm t -- --watch",
     "preversion": "npm run prod",
     "postversion": "npm run build"
   },

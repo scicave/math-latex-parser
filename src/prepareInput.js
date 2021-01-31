@@ -86,8 +86,14 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
     if (state.prefix && !b.prefixed)
       msg = `unexpected "${b.closing}" after "${state.prefix}"`;
     else if (last.state.prefix === "\\left") {
-      if (state.prefix !== "\\right")
+      if (state.prefix !== "\\right") {
         msg = `expected "\\right"${state.prefix ? ` but "${state.prefix}" found` : ""}`;
+        let location = peg$computeLocation(i.value, i.value);
+        error(msg, location);
+      }
+      Object.assign(state, defaultState);
+      i.value += b.closing.length; // consume the closing char
+      return;
     }
     else if (state.prefix !== last.state.prefix)
       msg = `expected "${last.state.prefix}"${state.prefix ? ` but "${state.prefix}" found` : ""}`;
@@ -273,11 +279,11 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
     if (state.prefix === "begin" || state.prefix === "end") {
       // such as: `\\begin 1 asd \\end 1`
       let location = peg$computeLocation(i.value, i.value);
-      error(`expected block "{something}" but ${input[i.value]} found`, location);
+      error(`expected block "{something}" but "${input[i.value]}" found`, location);
     } else if (state.prefix) {
       // such as: `\\begin 1 asd \\end 1`
       let location = peg$computeLocation(i.value, i.value);
-      error(`expected block opening ("{", "[", "(", ...) but ${input[i.value]} found`, location);
+      error(`expected block opening ("{", "[", "(", ...) but "${input[i.value]}" found`, location);
     }
 
     if (!skipConsuming) {
