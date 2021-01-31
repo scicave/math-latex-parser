@@ -1,7 +1,13 @@
 const texParser = require('./lib/');
 const prepareInput = require('./src/prepareInput.js');
 const { peg$computeLocation, error, SyntaxError, input } = require("./tests/pegjsPolyFill");
-let tex = process.env.tex || `a+ \\left {5+3} `;
+let tex =
+  process.argv[process.argv.length-1]  ||
+  process.argv[process.argv.length-1] ||
+  `a+ \\left {5+3} `
+;
+
+
 input.value = tex;
 
 // -----------------------------------
@@ -44,4 +50,6 @@ function log(fn, ...args){
 //   function with the desired args
 // -----------------------------------
 
-log(prepareInput, tex, peg$computeLocation, error);
+process.argv.indexOf('--prepare') > -1
+? log(prepareInput, tex, peg$computeLocation, error)
+: log(texParser.parse, tex);

@@ -12,8 +12,7 @@ class NodeCreator {
     // builtin function
     if (
       typeof name !== "string" ||
-      !Array.isArray(args) ||
-      this.options.builtInFunctions.indexOf(name) === -1
+      !Array.isArray(args)
     )
       this.invalidArgs("builtin function");
     return { type: "function", name, isBuiltin: true, args };

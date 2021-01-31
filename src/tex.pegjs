@@ -70,12 +70,6 @@
       options.builtinControlSeq.splice(0, 1, ...defaultConSeq);
   }
 
-  // they are static, shouldn't be controlled by options
-  var infixOperatorsConSeq = [
-    "approx", "leq", "geq", "neq", "gg", "ll",
-    "notin", "ni", "in", "cdot", "right"
-  ];
-
   let rawInput = input,
       // does commaExpression contains ellipsis
       // it has to be LIFO stack, push and pop
@@ -128,7 +122,9 @@ Operation1 =
   }
 
 /// the same as options.texOperators1
-texOperators1 = w:word &{ return w in infixOperatorsConSeq } { return w }
+texOperators1 =
+  "approx"/ "leq"/ "geq"/ "neq"/ "gg"/ "ll"/
+  "notin"/ "ni"/ "in"/ "cdot"/ "right"
 
 Operation2 =
   head:Operation3 tail:(_ ("+" / "-") _ Operation3)* {
@@ -213,14 +209,14 @@ Block_VBars =
 // -----------------------------------
 
 Functions "functions" =
-  BuiltInFunctions / Operatorname / Function
+  BuiltinFunctions / Operatorname / Function
 
-BuiltInFunctions "builtin functions" =
+BuiltinFunctions "builtin functions" =
   "\\" name:builtinFuncsTitles
   _ exp:SuperScript? _ args:builtinFunctionsArgs
   {
     if (!Array.isArray(args)) args = [args];
-    let func = new Node('function', args, {name, isBuiltIn:true});
+    let func = new Node('function', args, {name, isBuiltin:true});
     if(!exp) return func;
     else return createNode("operator", [func, exp], { name: '^', operatorType: 'infix' });
   }
@@ -286,7 +282,7 @@ CommaExpression =
 
 // put spaces around '...' here, use it directly there
 Ellipsis =
-  _ type:("..."/ "\\" t:dots { return t }) _
+  _ type:("..." / "\\" t:dots { return t }) _
   { return createNode("ellipsis", null, { type }) }
 
 // put spaces around '...' here, use it directly there
@@ -335,15 +331,16 @@ TexEntities =
     SpecialTexRules / SpecialSymbols  
 
 SpecialSymbols = "\\" name:specialSymbolsTitles !char {
-  return createNode('id', null, {name, isBuiltIn:true})
+  return createNode('id', null, {name, isBuiltin:true})
 }
 
 /// this may be operator, if so, don't consider as specialSymbol 
 specialSymbolsTitles =
-  a:word
-  &{ return !(a in infixOperatorsConSeq) }
+  // no need to !AnyThingElse such as dots ("ddots", "dots", "cdots", ...)
+  // because this is the last checked Factor
+  !(texOperators1 !char) a:word
   {
-    let name = text();
+    let name = a;
     if(check(name, options.builtinControlSeq)) return name;
     if (check(name, [
         options.builtinFunctions,
@@ -403,7 +400,7 @@ MemberExpression =
   }
 
 // not member expression
-memberArg = Function / Name
+memberArg = Functions / Name
 
 // -----------------------------------
 //             names
@@ -449,7 +446,7 @@ sign
 // -----------------------------------
 //              atoms
 // -----------------------------------
-  
+
 SquareBrackets = "[" _ expr:Expression "]" { return expr; }
 CurlyBrackets = "{" _ expr:Expression "}" { return expr; }
 

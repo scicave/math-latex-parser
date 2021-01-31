@@ -9,23 +9,19 @@ module.exports = [
 
   {
     tex: "\\sin(x)",
-    struct: node.BIF("sin", [node.block("()", ['x'])]),
+    struct: node.BIF("sin", ['x']),
   },
 
   {
     tex: `f(x)`,
     parserOptions: { functions: "f" },
-    struct: node.F("f",[
-      node.block("()", ["x"]),
-    ]),
+    struct: node.F("f",["x"]),
   },
 
   {
     tex: `f\\left(x\\right)`,
     parserOptions: { functions: "f" },
-    struct: node.F("f",[
-      node.block("\\left(\\right)", ["x"]),
-    ]),
+    struct: node.F("f", ["x"]),
   },
 
 ];
