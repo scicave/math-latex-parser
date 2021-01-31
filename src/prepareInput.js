@@ -3,164 +3,279 @@
  */
 
 module.exports = function prepareInput(input, peg$computeLocation, error) {
+  
   // #region vars
-  var
-    // the same as the pegjs rule "_" in ./tex.pegjs
+  let // the same as the pegjs rule "_" in ./tex.pegjs
     ignore = /^(?:\s|\\ )+/;
-    // when we remove the {...} block after one of these,
-    // the parsing expression will result in wrong tree
-  var argsNeededTest = /^(\^|_|\\frac|\\sqrt)/;
-  var argsNeeded = false;
-  var argsFor = '';
+  // when we remove the {...} block after one of these,
+  // the parsing expression will result in wrong tree
+  let needsArgRegExp = /^(\^|_|\\frac|\\sqrt)/;
+  let defaultState = {
+    neededArgsCount: 0,
+    argsFor: "",
+    prefix: ""
+  };
+  let state = Object.assign({}, defaultState);
   // it is used when we already consumed to stop he auto increament i.value++
-  var skipConsuming = false;
-  var i = { };
-  var blocks = [
-    { opening: '{', closing: '}' },
-    { opening: '(', closing: ')' },
-    { opening: '[', closing: ']' },
-    { opening: '|', closing: '|' },
-    { opening: '\\{', closing: '\\}' },
-    { opening: '\\|', closing: '\\|' },
-    { opening: '\\left{', closing: '\\right}' },
-    { opening: '\\left(', closing: '\\right)' },
-    { opening: '\\left[', closing: '\\right]' },
-    { opening: '\\left|', closing: '\\right|' }
+  let skipConsuming = false;
+  let i = {};
+  let blockStack = [];
+
+  let blocks = [
+    { opening: "{", closing: "}", prefixed: true },
+    { opening: "(", closing: ")", prefixed: true },
+    { opening: "[", closing: "]", prefixed: true },
+    { opening: "|", closing: "|", prefixed: true },
+    { opening: "\\{", closing: "\\}" },
+    { opening: "\\|", closing: "\\|" },
   ];
-  var stats = [];
+
+  let blockPrefixesReg = /^(\\left|\\right|\\begin|\\end|\\big|\\Big|\\bigg|\\Bigg)/;
 
   // #endregion
 
-  function closeBLock (b) {
-    let last = stats.pop();
+  function closeBLock(b) {
+    let last = blockStack.pop();
 
     // on some cases like: 1+2 \\sqrt{\\farc{1}}
-    if (argsNeeded) {
+    if (state.neededArgsCount) {
       let location = peg$computeLocation(i.value, i.value);
-      error(`${argsFor} needs ${ argsNeeded === 1 ? "an argument" : argsNeeded + " argumets" }`, location);
+      error(
+        `${state.argsFor} needs ${state.neededArgsCount === 1
+          ? "an argument"
+          : state.neededArgsCount + " argumets"
+        }`,
+        location
+      );
     }
 
-    // we are exiting independent expression in side a block
-    // continuting in another independent block or the originame input
-    // in both cases, here below may be assigning for argsFor and argsNeeded
-    // just reset them here
-    argsFor ="";
-    argsNeeded = 0;
+    if (last.state.prefix === "\\begin") {
+      blockStack.push({ isBegin: true, i: i.value });
+      Object.assign(state, defaultState);
+      i.value += b.closing.length; // consume the closing char
+      return;
+    } else if (last.state.prefix === "\\end") {
+      if (state.prefix) {
+        let location = peg$computeLocation(last.value, last.value);
+        error(`\\end found but can't find \\begin`, location);
+      }
+      let begin = blockStack.pop(); // pop another block
+      // we expect to find the one we push earlier
+      if (!begin.isBegin) {
+        let location = peg$computeLocation(last.value, last.value);
+        error(`\\end found but can't find \\begin`, location);
+      }
+      Object.assign(state, defaultState);
+      i.value += b.closing.length; // consume the closing char
+      return;
+      // new we habe begin-end block
+    }
 
-    if (last.b.opening === '{') {
+    let msg;
+    // un matched prefixes, `\\left {  \\right}`
+    if (state.prefix && !b.prefixed)
+      msg = `unexpected "${b.closing}" after "${state.prefix}"`;
+    else if (last.state.prefix === "left" && state.prefix !== "\\right")
+      msg = `expected "\\right" but "${state.prefix}" found`;
+    else if (state.prefix !== last.state.prefix)
+      msg = `expected "${last.state.prefix}" but "${state.prefix}" found`;
+
+    if (msg) {
+      let location = peg$computeLocation(i.value, i.value);
+      error(msg, location);
+    }
+
+    // we are exiting to the parent block
+    // we have to restore defaults
+    Object.assign(state, defaultState);
+
+    if (last.b.opening === "{") {
       /// it has effect with frac sqrt ^ _
-      if (!last.argsNeeded) {
+      if (!last.state.neededArgsCount) {
         // handling the unimportant braces or throw error if
         // contains some invalid expression
         input =
-          input.substring(0, last.i) + ' ' +
-          input.substring(last.i + 1, i.value) + ' ' +
-          input.substring(i.value + 1)
-        ;
-      } else if (last.argsNeeded === 2 && last.argsFor === '\\frac') {
-        argsFor ="\\frac";
-        argsNeeded = 1; skipConsuming = true;
+          input.slice(0, last.i) +
+          " " +
+          input.slice(last.i + 1, i.value) +
+          " " +
+          input.slice(i.value + 1);
+      } else if (last.state.neededArgsCount === 2 && last.state.argsFor === "\\frac") {
+        // upate the current state
+        state.argsFor = "\\frac";
+        state.neededArgsCount = 1;
       }
-    } else if (last.b.opening === '[') {
-      if (last.argsNeeded && last.argsFor === '\\sqrt') {
-        argsFor ="\\sqrt";
-        argsNeeded = 1; skipConsuming = true;
+    } else if (last.b.opening === "[") {
+      if (last.state.neededArgsCount && last.state.argsFor === "\\sqrt") {
+        // upate the current state
+        state.argsFor = "\\sqrt";
+        state.neededArgsCount = 1;
       }
     }
-    
+
+    // finally do the following stuff
     i.value += b.closing.length; // consume the closing char
-    skipConsuming = true;
   }
 
   function openBLock(b) {
-    stats.push({
-      b, i: i.value, argsNeeded, argsFor
+    let msg;
+
+    // validations
+    if (state.prefix === "\\right")
+      msg = `unexpected \\right at the block opening "${b.opening}"`;
+
+    else if (
+      (state.prefix === "\\begin" || state.prefix === "\\end") &&
+      b.opening !== "{"
+    )
+      // such as: `\\begin [something] asd \\end [something]`
+      msg = `expected block "{ ... }" but ${b.opening} found`;
+
+    else if (state.prefix && !b.prefixed)
+      msg = `unexpected "${b.closing}" after "${state.prefix}"`;
+
+    if (msg) {
+      let location = peg$computeLocation(i.value, i.value);
+      error(msg, location);
+    }
+
+    // push to the block stack, clone the state
+    blockStack.push({
+      b,
+      i: i.value,
+      state: Object.assign({}, state), // clone
     });
-    // these values has been stored,,, reset them, we are about
-    // to enter new independent expression in side a block
-    argsFor ="";
-    argsNeeded = 0;
+    Object.assign(state, defaultState); // restore defaults
     i.value += b.opening.length; // consume the closing char
-    skipConsuming = true;
   }
 
-  Object.defineProperty(i, 'value', {
-    get () {
+  Object.defineProperty(i, "value", {
+    get() {
       return this.__value;
     },
-    set (v) {
-      input.slice(v, -1).replace(ignore, m => {
+    set(v) {
+      input.slice(v, -1).replace(ignore, (m) => {
         v += m.length; // consume ignored letters, such as white spaces
       });
       this.__value = v;
-    }
+      // stop consuming at the end of the for loop
+      // if we are changing i.value nomally, it won't effect any thing
+      // skipConsuming is set to false then for loop `continue;`
+      skipConsuming = true;
+    },
   });
   i.value = 0;
 
-  for (; i.value < input.length;) {
+  while (i.value < input.length) {
 
-    input.slice(i.value, -1).replace(argsNeededTest, m => {
-
-      // tex = " \\frac\\sqrt{1}{2}!"; in such a tex input, there would be error, but 
-      // tex = " \\sqrt\\frac{1}{2}!"; will still the same and will be parsed
-      // tex = " \\sqrt\\frac{1}_{2}!"; 
-      // tex = " \\sqrt\\frac{1}^{2}!"; 
+    // validation and determine the current state
+    // the state is `neededArgsCount` and `argsFor`
+    input.slice(i.value).replace(needsArgRegExp, (m) => {
+      // tex = "\\frac\\sqrt{1}{2}!"; in such a tex input, there would be error, but
+      // tex = "\\sqrt\\frac{1}{2}!"; will still the same and will be parsed
+      // tex = "\\sqrt\\frac{1}_{2}!";
+      // tex = "\\sqrt\\frac{1}^{2}!";
+      // tex = "a_a_1"; is NOT valid
+      // tex = "a_{a_1}"; is VALID
       // in the previous last two cases, an error must be thrown
 
-      let a = argsNeeded === 2 ? "a" : "another";
+      let a = state.neededArgsCount === 2 ? "a" : "another"; // for semantic purpose
       let location;
       if (
-        (argsNeeded && argsFor === '\\frac' && (m === '^' || m === '_')) ||
-        (argsNeeded && argsFor === '\\frac' && m === '\\sqrt')
-      ) { location = peg$computeLocation(i.value, i.value); }
-      if (location) error(`expected ${a} group after \\frac, but found "${m}"`, location);
+        (
+          state.neededArgsCount &&
+          state.argsFor === "\\frac" &&
+          (m === "^" || m === "_")
+        ) || (
+          state.neededArgsCount &&
+          state.argsFor === "\\frac" &&
+          m === "\\sqrt"
+        )
+      ) {
+        location = peg$computeLocation(i.value, i.value);
+      }
 
-      argsNeeded = m === '\\frac' ? 2 : 1;
-      argsFor = m;
+      if (location)
+        error(`expected ${a} group after \\frac, but found "${m}"`, location);
+
+      state.neededArgsCount = m === "\\frac" ? 2 : 1;
+      state.argsFor = m;
       i.value += m.length; // consume the matched text
-      skipConsuming = true;
+    });
 
+    input.slice(i.value).replace(blockPrefixesReg, (pref) => {
+      state.prefix = pref;
+      i.value += pref.length; // consume the matched text
     });
 
     // loop through the input, open and close blocks using hereinabove functions
     for (const b of blocks) {
       let last;
-      if (stats.length) last = stats[stats.length - 1];
+      if (blockStack.length) last = blockStack[blockStack.length - 1];
 
       if (b.opening === b.closing) {
         // this is true for opening and closing the block
-        if (input.slice(i.value, i.value + b.opening.length) === b.opening /* || b.closing */) {
-          if (last && last.b === b) { closeBLock(b); } else { openBLock(b); }
-          break; // stop the blocks for loop
+        if (
+          input.slice(i.value, i.value + b.opening.length) ===
+          b.opening /* || b.closing */
+        ) {
+          if (last && last.b === b) {
+            closeBLock(b);
+          } else {
+            openBLock(b);
+          }
+          break; // stop the blocks for-loop
         }
-      } else if (input.slice(i.value, i.value + b.opening.length) === b.opening) {
-        openBLock(b); break; // stop blocks the for loop
-      } else if (input.slice(i.value, i.value + b.closing.length) === b.closing) {
+      } else if (
+        input.slice(i.value, i.value + b.opening.length) === b.opening
+      ) {
+        openBLock(b);
+        break; // stop blocks the for-loop
+      } else if (
+        input.slice(i.value, i.value + b.closing.length) === b.closing
+      ) {
         if (last && last.b !== b) {
           const location = peg$computeLocation(i.value, i.value);
-          error(`"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`, location);
-        } else if (!last || stats.filter(_=>_.b === b).length === 0) {
+          error(
+            `"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`,
+            location
+          );
+        } else if (!last || blockStack.filter((_) => _.b === b).length === 0) {
           const location = peg$computeLocation(i.value, i.value);
           // closing with out opening
           error(`block "${b.opening}" is not found before!`, location);
         }
         closeBLock(b);
-        break; // stop the blocks for loop
+        break; // stop the blocks for-loop
       }
     }
 
-    // consume arg if it needed and decrease argsNeeded by one
-    // if it is not needed consume and don't decrease
-    if(!skipConsuming) { i.value++; if(argsNeeded) argsNeeded--; }
-    skipConsuming = false;
+    if (state.prefix === "begin" || state.prefix === "end") {
+      // such as: `\\begin 1 asd \\end 1`
+      let location = peg$computeLocation(i.value, i.value);
+      error(`expected block "{something}" but ${input[i.value]} found`, location);
+    } else if (state.prefix) {
+      // such as: `\\begin 1 asd \\end 1`
+      let location = peg$computeLocation(i.value, i.value);
+      error(`expected block opening ("{", "[", "(", ...) but ${input[i.value]} found`, location);
+    }
+
+    if (!skipConsuming) {
+      i.value++;
+      if (state.neededArgsCount) state.neededArgsCount--;
+    }
+    skipConsuming = false; // reset it
   }
 
-  if (stats.length > 0) {
-    let last = stats.pop();
+  if (blockStack.length > 0) {
+    let last = blockStack.pop();
     // this will throw reference error if the module used standalone
     const location = peg$computeLocation(i.value, i.value);
     // this will throw syntax error in the built commonjs module
-    error(`"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`, location);
+    error(
+      `"${last.b.opening}" found but the block is not closed, hint: add "${last.b.closing}"`,
+      location
+    );
   }
 
   return input;
