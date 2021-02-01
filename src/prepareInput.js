@@ -55,7 +55,13 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
 
 
     if (last.state.prefix === "\\begin") {
-      blockStack.push({ isBegin: true, i: i.value });
+      let braces = input.slice(last.i, i.value+1);
+      blockStack.push({
+        isBegin: true,
+        i: i.value,
+        // for throwing when \end is not found 
+        b: { opening: "\\begin" + braces, closing: "\\end" + braces }
+      });
       Object.assign(state, defaultState);
       i.value += b.closing.length; // consume the closing char
       return;

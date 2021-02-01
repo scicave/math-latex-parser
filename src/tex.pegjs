@@ -79,6 +79,12 @@
       // it has to be LIFO stack, push and pop
       doesContainEllipsis = [];
 
+  // they are static, shouldn't be controlled by options
+  let texOperators1 = [
+    "approx", "leq", "geq", "neq", "gg", "ll",
+    "notin", "ni", "in", "cdot", "right"
+  ];
+
   text = function() {
     return rawInput.substring(peg$savedPos, peg$currPos);
   }
@@ -147,60 +153,42 @@
     // node is expr or 1d array or 2d array
     // validation, [), (], {}, [], () are allowed
     if (
-      o === '[' && c === "}" ||
-      o === '{' && c === "]" ||
-      o === '(' && c === "}" ||
-      o === '{' && c === ")"
-    ) error(`unexpected closing for the block`);
+      o === '{' && c !== "}" ||
+      o !== '{' && c === "}"
+    )
+      error(`unexpected brackets: "${o} and "${c}"`);
 
-    // // set
-    // if (Array.isArray(node) && Array.isArray(node[0])) {
-    //   if (o === "[" && c === "]") {
-    //     // matrix
-    //     let rows = node.length, cols = node[0].length;
-    //     for (let n of node)
-    //       if (n.length !== cols)
-    //         error("matrix has different column sizes");
-    //     return createNode("matrix", node, { shape: [ rows, cols ] });
-    //   }
-    //   error("unexpected \";\" separetor in a block " + `"${o}${c}"`);
-    // }
+    // now node is 1d array or expr
 
-    // // now node is 1d array or expr
+    // sets
+    if (o === "{") { // c is "}"
+      // set with one item
+      return createNode("set", Array.isArray(node) ? node: [node]);
+    }
 
-    // // sets
-    // if (o === "{") { // c is "}"
-    //   // set with one item
-    //   return createNode("set", Array.isArray(node) ? node: [node]);
-    // }
+    // tuple or interval or set
+    if (Array.isArray(node)) {
+      if (node.length === 2 && options.extra.intervals) {
+        // make sure not have ellpsis
+        if (node[0].type !== "ellipsis" && node[1].type !== "ellipsis")
+          return createNode("interval", node, { startInclusive: o==="[", endInclusive: c==="]" });
+      }
+      if (o === "[" || c === "]")
+        // all possible expressions for "[]" are consumed here
+        error(`unexpected brackets: "${o} and "${c}"`);
+      if (node.length === 2 && !options.extra.tuples)
+        // we may not throw here, it will throw inside createNode
+        // but this message is more informative
+        return error("neither tuples nor intervals are allowed");
+      return createNode("tuple", node);
+    }
 
-    // // tuple or interval or set
-    // if (Array.isArray(node)) {
-    //   if (node.length === 2 && options.extra.intervals)
-    //     // make sure not have ellpsis
-    //     if (node[0].type !== "ellipsis" &&
-    //         node[1].type !== "ellipsis") {
-    //           return createNode("interval", node, { startInclusive: o==="[", endInclusive: c==="]" });
-    //         }
-    //   // matrix
-    //   if (o === "[" && c === "]") 
-    //     return createNode("matrix", [node]);
-    //   // all possible expressions for "[]" are consumed here
-    //   if (o === "[" || c === "]") error(`unexpected closing for the block`);
-    //   if (node.length === 2 && !options.extra.tuples)
-    //     return error("neither tuples nor intervals are allowed");
-    //   return createNode("tuple", node);
-    // }
+    // -----------| now node is expr |-----------
+    // all possible expressions for "[]" are consumed here
 
-    // // now node is expr
-
-    // // it is matrix
-    // if (o === "[" && c === "]")
-    //   return createNode("matrix", [[node]]);
-
-    // // extra validation, we are now dealing with "()"
-    // if (o === "[" || c === "]")
-    //   error(`unexpected brackets opening and closing`);
+    // extra validation, we are now dealing with "()"
+    if (o === "[" || c === "]")
+      error(`unexpected brackets: "${o} and "${c}"`);
 
     return options.keepParen
       ? createNode("parentheses", [node])
@@ -225,10 +213,10 @@ Operation1 =
     }, head);
   }
 
-/// the same as options.texOperators1
 texOperators1 =
-  "approx"/ "leq"/ "geq"/ "neq"/ "gg"/ "ll"/
-  "notin"/ "ni"/ "in"/ "cdot"/ "right"
+  w:word
+  &{ return w in texOperators1 }
+  { return w }
 
 Operation2 =
   head:Operation3 tail:(_ ("+" / "-") _ Operation3)* {
@@ -396,12 +384,12 @@ TupleOrExprOrParenOrIntervalOrSet =
 
 blockOpeningsss =
   leftPrefixes? _
-  a:("(" / "[" / "{" / "\\]" / "\\}")
+  a:("(" / "[" / "{" / "\\}")
   { return a.length === 2 ? a[1] : a; }
 
 blockClosingsss =
   rightPrefixes? _
-  a:(")" / "]" / "}" / "\\]" / "\\}")
+  a:(")" / "]" / "}" / "\\}")
   { return a.length === 2 ? a[1] : a; }
 
 // -----------------------------------
@@ -419,9 +407,10 @@ SpecialSymbols = "\\" name:specialSymbolsTitles !char {
 specialSymbolsTitles =
   // no need to !AnyThingElse such as dots ("ddots", "dots", "cdots", ...)
   // because this is the last checked Factor
-  !(texOperators1 !char) a:word
+  !(texOperators1 !char)
+  !(leftPrefixes !char)
+  name:word &{ return !check(name, ["begin", "end", "right" /* for rightPrefixes */, "cdot"]) }
   {
-    let name = a;
     if(check(name, options.builtinControlSeq)) return name;
     if (check(name, [
         options.builtinFunctions,
@@ -478,22 +467,26 @@ Matrix =
   {
     if(t1 !== t2)
       error(`different titles: \\begin{${t1}} and \\end{${t2}}`);
-    if (!(t1 in [
+    console.log(t1);
+    if (!check(t1, [
       "matrix", "pmatrix", "bmatrix",
       "Bmatrix", "smallmatrix", "Bmatrix",
       "vmatrix", "Vmatrix"
     ]))
-    return createNode("matrix", rows, {type});
+      error(`invalid matrix type: ${t1}`);
+    return createNode("matrix", rows, { matrixType: t1 });
   }
 
 matrixRows = 
   head:matrixRow tail:(_ "\\\\" _ matrixRow)* {
+    tail = tail.map(n=>n[3])
     tail.unshift(head);
     return tail;
   }
 
 matrixRow = 
   head:Expression tail:(_ "&&" _ Expression)* {
+    tail = tail.map(n=>n[3])
     tail.unshift(head);
     return tail;
   }

@@ -80,7 +80,15 @@ Node.types = {
   INT: 'int',
   SUM: 'sum',
   SQRT: 'sqrt',
-  OPERATORNAME: 'operatorname'
+  OPERATORNAME: 'operatorname',
+
+  PARENTHESES: "parentheses",
+  INTERVAL: "interval",
+  MATRIX: "matrix",
+  TUPLE: "tuple",
+  SET: "set",
+  ABS: "abs", // | value |
+  ELLIPSIS: "ellipsis",
 
 };
 
