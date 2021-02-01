@@ -5,7 +5,7 @@ const createId = (name, extra={}) => new Node("id", null, { name, ...extra });
 
 describe("test Node.prototype.check", ()=>{
 
-  test("should return true when props is partial from the instance", ()=>{
+  it("should return true when props is partial from the instance", ()=>{
     let node;
     node = new Node("operator", [1, 2], {name:"+",operatorType:"infix"});
     expect(node.check({})).toBe(true);
@@ -13,7 +13,7 @@ describe("test Node.prototype.check", ()=>{
     expect(node.check({name: "+", operatorType: "infix"})).toBe(true);
   });
 
-  test("should return false when props is not partial from the instance", ()=>{
+  it("should return false when props is not partial from the instance", ()=>{
     let node;
     node = new Node("operator", [1, 2], {name:"+",operatorType:"infix"});
     expect(node.check({asd: ""})).toBe(false);
@@ -22,7 +22,7 @@ describe("test Node.prototype.check", ()=>{
     expect(node.check({name: "+", operatorType: "asd"})).toBe(false);
   });
 
-  test("should return true when args are equal and checkArgs = true", ()=>{
+  it("should return true when args are equal and checkArgs = true", ()=>{
     let node;
     node = new Node("operator", [1, 2], {name:"+",operatorType:"infix"});
     expect(
@@ -33,7 +33,7 @@ describe("test Node.prototype.check", ()=>{
     ).toBe(false);
   });
 
-  test("should return true when args are NOT equal and checkArgs = false", ()=>{
+  it("should return true when args are NOT equal and checkArgs = false", ()=>{
     let node;
     node = new Node("operator", [1, 2], {name:"+",operatorType:"infix"});
     expect(
@@ -51,7 +51,7 @@ describe("test Node.prototype.check", ()=>{
     ).toBe(true);
   });
 
-  test("should return false when args are NOT equal and checkArgs = true", ()=>{
+  it("should return false when args are NOT equal and checkArgs = true", ()=>{
     let node;
     node = new Node("operator", [1, 2], {name:"+",operatorType:"infix"});
     expect(
@@ -62,7 +62,7 @@ describe("test Node.prototype.check", ()=>{
     ).toBe(false);
   });
 
-  test("should return true when one of the properties is Node", ()=>{
+  it("should return true when one of the properties is Node", ()=>{
     let node;
     node = new Node(
       "operatorname", [createNum(1), createId("theta", {isBuiltin:true})], {
@@ -83,5 +83,53 @@ describe("test Node.prototype.check", ()=>{
       }, true)
     ).toBe(true);
   });
+
+});
+
+describe("test Node.prototype.checType", ()=>{
+
+  it("should return true when types match", ()=>{
+    let node;
+
+    node = new Node(
+      "operatorname", [createNum(1), createId("theta", {isBuiltin:true})], {
+        name: createId("a"),
+        operatorType:"infix"
+      }
+    );
+    expect(node.checkType("operatorname")).toBe(true);
+
+    node = createNum(1);
+    expect(node.checkType("number")).toBe(true);
+
+    node = createId("a");
+    expect(node.checkType("id")).toBe(true);
+
+    node = new Node("operator", [createNum(1), createNum(2)], { name: "+", operatorType: "infix" });
+    expect(node.checkType("operator")).toBe(true);
+  });
+
+  it("should return false when types DON'T match", ()=>{
+    let node;
+    node = createNum(1);
+    expect(node.checkType("id")).toBe(false);
+
+    node = createId("a");
+    expect(node.checkType("number")).toBe(false);
+  });
+
+
+  it("should THROW when type is not valid", ()=>{
+    let node;
+    node = createNum(1);
+    expect(()=> node.checkType("numberasd")).toThrow();
+
+    node = createId("a");
+    expect(()=> node.checkType("idasd")).toThrow();
+
+    node = new Node("operator", [createNum(1), createNum(2)], { name: "+", operatorType: "infix" });
+    expect(()=> node.checkType("operatorasd")).toThrow();
+  });
+
 
 });
