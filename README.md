@@ -247,14 +247,15 @@ Type = `Array<`[Checker](#checker)`>`, default:
   "psi", "Psi", "chi", "tau", "sigma", "Sigma",
   "varsigma", "rho", "varrho", "Xi", "xi", "nu",
   "imath", "jmath", "ell", "Re", "Im", "wp", "Nabla",
-  "infty", "aleph", "beth", "gimel", "comicron", "iota",
-  "delta", "thetasym", "omicron", "Delta", "Epsilon",
-  "Zeta", "Eta", "Theta", "Iota", "Kappa", "Mu", "Nu",
-  "Omicron", "Rho", "Tau", "Chi", "infty", "infin", "nabla",
-  "mho", "mathsterling", "surd", "diamonds", "Diamond",
-  "hearts", "heartsuit", "spades", "spadesuit", "clubsuit",
-  "clubs", "bigstar", "star", "blacklozenge", "lozenge",
-  "sharp", "maltese", "blacksquare", "square", "triangle", "blacktriangle"
+  "infty", "aleph", "beth", "gimel", "comicron",
+  "iota", "delta", "thetasym", "omicron", "Delta",
+  "Epsilon", "Zeta", "Eta", "Theta", "Iota", "Kappa",
+  "Mu", "Nu", "Omicron", "Rho", "Tau", "Chi", "infty",
+  "infin", "nabla", "mho", "mathsterling", "surd",
+  "diamonds", "Diamond", "hearts", "heartsuit", "spades",
+  "spadesuit", "clubsuit", "clubs", "bigstar", "star",
+  "blacklozenge", "lozenge", "sharp", "maltese", "blacksquare",
+  "square", "triangle", "blacktriangle"
 ]
 ```
 
@@ -299,12 +300,12 @@ mathLatexParser.parse(tex, {
   - `f(x).a(y).r`.
 - `intervals`: true or false, will return node with properties `{ startInlusive: boolean, endInclusive: boolean }`.
   - `[1,2]`
-  - `(-.5, infinity)`
+  - `(-.5, \infin)`
   - `(-pi, 1]`
   - `[2,5)`
-- `sets`: e.g., `\big{ 1, sqrt(pi), ..., sqrt(pi)^10 \big}`
+- `sets`: e.g., `\big{ 1, \sqrt \pi, ..., \left(\sqrt \pi\right)^10 \big}`
 - `tuples`: e.g., `(1, 2, x, ...)`
-- `matrices`: e.g., `\left[ sinx, 1, 3; cosy, sqrt(3), 0 \right]`
+- `matrices`: e.g., `\left[ \sin x, 1, 3; \cos y, \sqrt 3, 0 \right]`
 - `ellipsis`: to allow the 3-dots "...", e.g., `\{{ 1, 3, 5, ... \}}`
 
 ----------------------
