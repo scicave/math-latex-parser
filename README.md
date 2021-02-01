@@ -11,7 +11,15 @@ npm i @scicave/math-latex-parser
 
 ## Usage
 
-You can also pass options to the parse function:
+Browser
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@scicave/math-latex-parser/lib/bundle.js"></script>
+<!-- or -->
+<script src="https://cdn.jsdelivr.net/npm/@scicave/math-latex-parser/lib/bundle.min.js"></script>
+```
+
+-------------------
 
 ```js
 console.log(parse(tex, options));
