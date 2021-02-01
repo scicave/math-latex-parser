@@ -1,4 +1,4 @@
-// TODO: parse comments such as % for commenting line  
+// TODO: parse comments such as % for commenting line
 // TODO: Parse MemberExpression
 // TODO: sets, { 1,2, ...,3 }
 // TODO: tuples, ( 1,2, , , ...,3 )
@@ -26,7 +26,7 @@
 
     // default builtin functions
     let defaultBIFs = [
-      "sinh", "cosh", "tanh", 
+      "sinh", "cosh", "tanh",
       "sin", "cos", "tan", "sec", "csc", "cot",
       "arcsin", "arccos", "arctan", "arcsec", "arccsc", "arccot",
       "ln"
@@ -137,7 +137,7 @@
   function check(value, rule) {
     if (rule instanceof Array) {
       for (let i=0; i<rule.length; i++) {
-        if (check(value, rule[i])) return true;  
+        if (check(value, rule[i])) return true;
       }
     } else if (rule instanceof Function) {
       return rule(value);
@@ -199,14 +199,14 @@
 
 Expression "expression" = _ expr:Operation0 _ { return expr; }
 
-Operation0 = 
+Operation0 =
   head:Operation1 tail:(_ "=" _ Operation1)* _{
     return tail.reduce(function(result, element) {
       return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
   }
 
-Operation1 = 
+Operation1 =
   head:Operation2 tail:(_ ("\\" title:texOperators1 !char { return title }) _ Operation2)* _{
     return tail.reduce(function(result, element) {
       return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
@@ -305,7 +305,7 @@ Operatorname "\\operatorname" =
     return createNode("operatorname", [arg])
   }
 
-Function = 
+Function =
   name:$Name
   &{ return check(name, options.functions) } _
   args:functionParentheses
@@ -316,7 +316,7 @@ functionParentheses =
   // open parenthese
   ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\left")? _ "("
   // function actual args
-  a:CommaExpression // there is spaces around it, not need for _ 
+  a:CommaExpression // there is spaces around it, not need for _
   // close parenthese
   ("\\big"/ "\\Big"/ "\\bigg"/ "\\Bigg"/ "\\right")? _ ")"
   {
@@ -330,7 +330,7 @@ functionParentheses =
   /
   // fallback when the previous grammar doesn't match
   &{ doesContainEllipsis.pop(); return true }
-  "(" _ ")" { return [] }; 
+  "(" _ ")" { return [] };
 
 // there is spaces around expressions already no need for _ rule
 CommaExpression =
@@ -374,9 +374,6 @@ TupleOrExprOrParenOrIntervalOrSet =
   arr1dOrExpr:CommaExpression
   c:blockClosingsss
   {
-    let remreg = /\s*\\([bB]igg?|left|right)/g
-    o = o.replace(remreg, '');
-    c = c.replace(remreg, '');
     return handleBlock(arr1dOrExpr, o, c);
   }
   // fallback action, pop the last item
@@ -384,26 +381,26 @@ TupleOrExprOrParenOrIntervalOrSet =
 
 blockOpeningsss =
   leftPrefixes? _
-  a:("(" / "[" / "{" / "\\}")
-  { return a.length === 2 ? a[1] : a; }
+  a:("(" / "[" / "{" / "\\{{" / "\\{")
+  { return a.length > 1 ? a[1] : a; }
 
 blockClosingsss =
   rightPrefixes? _
-  a:(")" / "]" / "}" / "\\}")
-  { return a.length === 2 ? a[1] : a; }
+  a:(")" / "]" / "}" / "\\}}" / "\\}")
+  { return a.length > 1 ? a[1] : a; }
 
 // -----------------------------------
 //        backslash backslash
 // -----------------------------------
 
 TexEntities =
-    SpecialTexRules / SpecialSymbols  
+    SpecialTexRules / SpecialSymbols
 
 SpecialSymbols = "\\" name:specialSymbolsTitles !char {
   return createNode('id', null, {name, isBuiltin:true})
 }
 
-/// this may be operator, if so, don't consider as specialSymbol 
+/// this may be operator, if so, don't consider as specialSymbol
 specialSymbolsTitles =
   // no need to !AnyThingElse such as dots ("ddots", "dots", "cdots", ...)
   // because this is the last checked Factor
@@ -421,7 +418,7 @@ specialSymbolsTitles =
     }
     error('undefined control sequence "' + name + '"');
   }
-  
+
 SpecialTexRules = Sqrt / IntSumProd / Frac
 
 Sqrt =
@@ -443,7 +440,7 @@ IntSumProd = "\\" n:("int" / "sum" / "prod") !char _
     return createNode(n, subsup);
   }
 
-Frac = "\\frac" !char _ 
+Frac = "\\frac" !char _
   args:(first:Arg _ second:Arg { return [first, second]; })
   { return createNode("frac", args); }
 
@@ -460,14 +457,13 @@ oneCharArg "digit or char" = w {
 //           matrices
 // -----------------------------------
 
-Matrix = 
+Matrix =
   "\\begin" _ "{" _ t1:word _ "}" _
   rows:matrixRows _
   "\\end" _ "{" t2:word "}"
   {
     if(t1 !== t2)
       error(`different titles: \\begin{${t1}} and \\end{${t2}}`);
-    console.log(t1);
     if (!check(t1, [
       "matrix", "pmatrix", "bmatrix",
       "Bmatrix", "smallmatrix", "Bmatrix",
@@ -477,15 +473,15 @@ Matrix =
     return createNode("matrix", rows, { matrixType: t1 });
   }
 
-matrixRows = 
+matrixRows =
   head:matrixRow tail:(_ "\\\\" _ matrixRow)* {
     tail = tail.map(n=>n[3])
     tail.unshift(head);
     return tail;
   }
 
-matrixRow = 
-  head:Expression tail:(_ "&&" _ Expression)* {
+matrixRow =
+  head:Expression tail:(_ "&" _ Expression)* {
     tail = tail.map(n=>n[3])
     tail.unshift(head);
     return tail;
@@ -568,7 +564,7 @@ rightPrefixes = ("\\right" / "\\Big" / "\\Bigg" / "\\big" / "\\bigg")
 //            primitives
 // -----------------------------------
 
-factorial = "!" 
+factorial = "!"
 
 nl "newline"      = "\n" / "\r\n"
 sp "space or tab" = " "  / "\t"
