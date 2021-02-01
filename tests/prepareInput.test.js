@@ -50,10 +50,11 @@ let tests = {
   ]],
 
   "should prepare begin-end block": [[
-    " \\begin{12} \\end{12}",
-    " \\begin{12} asd && 123 // qwe && 456 \\end{12}",
+    "\\begin{12} \\end{12}",
+    "\\begin{12} asd && 123 // qwe && 456 \\end{12}",
   ], [
-    " \\begin a asd && 123 // qwe && 456 \\end a",
+    "\\begin a asd && 123 // qwe && 456 \\end a",
+    "\\begin{asd} "
   ]],
 
   'should prepare with prefixes for block, "\\left, \\Bigg", ...': [[
@@ -61,16 +62,17 @@ let tests = {
     " \\sqrt\\left{ 1\\right}",
     // braces will be remove, \\Bug will throw inside the parser itsolf
     [" \\Bug{ \\Bug}", " \\Bug  \\Bug "],
-    " \\Big{ 123 \\Big}",
-    " \\big{ 123 \\big}",
-    " \\Bigg{ 123 \\Bigg}",
-    " \\bigg{ 123 \\bigg}",
+    "\\Big{ 123 \\Big}",
+    "\\big{ 123 \\big}",
+    "\\Bigg{ 123 \\Bigg}",
+    "\\bigg{ 123 \\bigg}",
   ], [
-    " \\right{ \\right}",
-    " \\left{ \\left}",
-    " \\left{ }",
-    " \\left }",
-    " \\Big{ \\big}",
+    "\\left\\{ \\right\\}",
+    "\\right{ \\right}",
+    "\\left{ \\left}",
+    "\\left{ }",
+    "\\left }",
+    "\\Big{ \\big}",
   ]]
 
 }

@@ -2,6 +2,13 @@ const { node } = require("./utils");
 
 module.exports = [
   {
+    title: "should throw: when { autoMult: false }",
+    tex: "2x",
+    parserOptions: { autoMult: false },
+    error: true, errorType: "syntax"
+  },
+
+  {
     tex: "-.123^6cd\\sqrt af",
     struct: node.am([
       node.am([

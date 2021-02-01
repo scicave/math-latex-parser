@@ -46,13 +46,6 @@ class NodeCreator {
     return { type: "sqrt", args };
   }
 
-  paren(args) {
-    // frac
-    if (!Array.isArray(args))
-      this.invalidArgs("parenthese");
-    return { type: "parenthese", args };
-  }
-
   op(name, args) {
     // operator
     if (
@@ -81,6 +74,46 @@ class NodeCreator {
   mem(args) {
     if (!Array.isArray(args)) this.invalidArgs("member expression");
     return { type: "member expression", args };
+  }
+
+  paren(args) {
+    // frac
+    if (!Array.isArray(args))
+      this.invalidArgs("parenthese");
+    return { type: "parenthese", args };
+  }
+
+  abs(args) {
+    if (!Array.isArray(args) || args.length !== 1) this.invalidArgs("abs");
+    return { type: "abs", args };
+  }
+
+  tuple(args) {
+    if (!Array.isArray(args)) this.invalidArgs("tuple");
+    return { type: "tuple", args };
+  }
+
+  set(args) {
+    if (!Array.isArray(args)) this.invalidArgs("set");
+    return { type: "set", args };
+  }
+
+  interval(args, extra = {}) {
+    if (
+      !Array.isArray(args) ||
+      args.length !== 2 ||
+      typeof extra !== "object"
+    ) { this.invalidArgs("interval") }
+    return { type: "interval", args, ...extra };
+  }
+
+  matrix(args, extra = {}) {
+    if (
+      !Array.isArray(args) ||
+      args.find((i) => !Array.isArray(i)) ||
+      typeof extra !== "object"
+    ) { this.invalidArgs("matrix") }
+    return { type: "matrix", args, ...extra };
   }
 }
 

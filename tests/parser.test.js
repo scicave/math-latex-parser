@@ -106,6 +106,7 @@ expect.extend({
 });
 
 function getTitle(__test) {
+  if (__test.Title) return __test.Title;
   // return tex.replace(/\n/g, '\\n');
   let mkt = (m) => `\n\t\t\t${JSON.stringify(m)}`;
   if (__test.title) { 
