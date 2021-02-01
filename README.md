@@ -305,7 +305,7 @@ mathLatexParser.parse(tex, {
   - `[2,5)`
 - `sets`: e.g., `\big{ 1, \sqrt \pi, ..., \left(\sqrt \pi\right)^10 \big}`
 - `tuples`: e.g., `(1, 2, x, ...)`
-- `matrices`: e.g., `\left[ \sin x, 1, 3; \cos y, \sqrt 3, 0 \right]`
+- `matrices`: e.g., `\begin{matrix} ... \end{matrix}`
 - `ellipsis`: to allow the 3-dots "...", e.g., `\{{ 1, 3, 5, ... \}}`
 
 ----------------------
