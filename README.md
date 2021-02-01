@@ -250,7 +250,11 @@ Type = `Array<`[Checker](#checker)`>`, default:
   "infty", "aleph", "beth", "gimel", "comicron", "iota",
   "delta", "thetasym", "omicron", "Delta", "Epsilon",
   "Zeta", "Eta", "Theta", "Iota", "Kappa", "Mu", "Nu",
-  "Omicron", "Rho", "Tau", "Chi"
+  "Omicron", "Rho", "Tau", "Chi", "infty", "infin", "nabla",
+  "mho", "mathsterling", "surd", "diamonds", "Diamond",
+  "hearts", "heartsuit", "spades", "spadesuit", "clubsuit",
+  "clubs", "bigstar", "star", "blacklozenge", "lozenge",
+  "sharp", "maltese", "blacksquare", "square", "triangle", "blacktriangle"
 ]
 ```
 
@@ -292,9 +296,7 @@ mathLatexParser.parse(tex, {
 
 - `memberExpressions`, for example:
   - `p.x`
-  - `point.x`
-  - `f(x).someProperty.fn(y).result`: valid syntax in both cases of `singleCharName`.
-  - .......... etc, and so on.
+  - `f(x).a(y).r`.
 - `intervals`: true or false, will return node with properties `{ startInlusive: boolean, endInclusive: boolean }`.
   - `[1,2]`
   - `(-.5, infinity)`

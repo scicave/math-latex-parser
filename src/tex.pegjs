@@ -15,13 +15,23 @@
 {
   {
     let defaultLetters = [
-      "alpha", "Alpha", "beta", "Beta", "gamma", "Gamma", "pi", "Pi", "varpi", "phi", "Phi",
-      "varphi", "mu", "theta", "vartheta", "epsilon", "varepsilon", "upsilon", "Upsilon",
-      "zeta", "eta", "Lambda", "lambda", "kappa", "omega", "Omega", "psi", "Psi",
-      "chi", "tau", "sigma", "Sigma", "varsigma", "rho", "varrho", "Xi", "xi", "nu",
-      "imath", "jmath", "ell", "Re", "Im", "wp", "Nabla", "infty", "aleph", "beth",
-      "gimel", "comicron", "iota", "delta", "thetasym", "omicron", "Delta", "Epsilon",
-      "Zeta", "Eta", "Theta", "Iota", "Kappa", "Mu", "Nu", "Omicron", "Rho", "Tau", "Chi"
+      "alpha", "Alpha", "beta", "Beta", "gamma",
+      "Gamma", "pi", "Pi", "varpi", "phi", "Phi",
+      "varphi", "mu", "theta", "vartheta", "epsilon",
+      "varepsilon", "upsilon", "Upsilon", "zeta", "eta",
+      "Lambda", "lambda", "kappa","omega", "Omega",
+      "psi", "Psi", "chi", "tau", "sigma", "Sigma",
+      "varsigma", "rho", "varrho", "Xi", "xi", "nu",
+      "imath", "jmath", "ell", "Re", "Im", "wp", "Nabla",
+      "infty", "aleph", "beth", "gimel", "comicron", "iota",
+      "delta", "thetasym", "omicron", "Delta", "Epsilon",
+      "Zeta", "Eta", "Theta", "Iota", "Kappa", "Mu", "Nu",
+      "Omicron", "Rho", "Tau", "Chi", "infty", "infin", "nabla",
+      "mho", "mathsterling", "surd", "diamonds", "Diamond",
+      "hearts", "heartsuit", "spades", "spadesuit", "clubsuit",
+      "clubs", "bigstar", "star", "blacklozenge", "lozenge",
+      "sharp", "maltese", "blacksquare", "square", "triangle",
+      "blacktriangle"
     ];
 
     // default builtin functions
@@ -295,18 +305,20 @@ builtinFunctionsArgs = functionParentheses / Operation4
 
 Operatorname "\\operatorname" =
   "\\operatorname" _
-  n:$("{" _ $Name _ "}" / ws char) _
-  arg:functionParentheses
+  n:$(
+    "{" _ name:Name _ "}" { return name } /
+    ws name:char { return name }
+  ) _ args:functionParentheses
   {
-    let opname = n.replace(/\s*/g, '');
-    return createNode("operatorname", [arg])
+    let opname = n.name;
+    return createNode("operatorname", args, { name: opname });
   }
 
 Function =
   name:$Name
   &{ return check(name, options.functions) } _
   args:functionParentheses
-  { return createNode('function', [args], { name }); }
+  { return createNode('function', args, { name }); }
 
 functionParentheses =
   &{ doesContainEllipsis.push(false); return true }
@@ -322,7 +334,7 @@ functionParentheses =
     let ellipsisAllowed = typeof ellipsis === 'object' ? ellipsis.funcArgs : ellipsis;
     if (__doesContainEllipsis && !ellipsisAllowed)
       error('ellipsis is not allowed to be an arg in a function');
-    return a;
+    return Array.isArray(a) ? a : [a];
   }
   /
   // fallback when the previous grammar doesn't match
@@ -403,8 +415,12 @@ specialSymbolsTitles =
   // because this is the last checked Factor
   !(texOperators1 !char)
   !(leftPrefixes !char)
-  name:word &{ return !check(name, ["begin", "end", "right" /* for rightPrefixes */, "cdot"]) }
-  {
+  name:word &{
+    return !check(name, [
+      "begin", "end", "right" /* for rightPrefixes */,
+      "cdot", "operatorname"
+    ])
+  } {
     if(check(name, options.builtinLetters)) return name;
     if (check(name, [
         options.builtinFunctions,

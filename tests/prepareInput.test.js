@@ -9,7 +9,7 @@ const prepare = (tex) => {
     pegjsPolyFill.peg$computeLocation,
     pegjsPolyFill.error
   );
-}
+};
 
 let tests = {
 
@@ -76,7 +76,7 @@ let tests = {
     "\\Big{ \\big}",
   ]]
 
-}
+};
 
 function doTests(value) {
   if (Array.isArray(value)) {
@@ -84,7 +84,7 @@ function doTests(value) {
     if(value.length === 0 ||
       !Array.isArray(value[0]) ||
       value[1] && !Array.isArray(value[1]))
-    { throw new Error(`tests array should be 2d array`) }
+    { throw new Error(`tests array should be 2d array`); }
 
     let [toStayTheSame, toThrow = []] = value;
 
