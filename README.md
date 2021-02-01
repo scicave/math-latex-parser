@@ -165,12 +165,12 @@ The `parse` function returns a `Node`, which may have array of other `Node`s in 
 
 The `Node` type, see the [available types](#nodetypes).
 
-### Node.prototype.check(props: Object)
+### Node.prototype.check(props: Object, checkArgs=false)
 
-This method can check all properties except `args`, it will be ignored.
+This method can check all properties except `args`, it will be ignored. Args will be checked if the 2nd arg (`checkArgs`) passed to `check` is `true`.
 
 ```js
-let node = mathLatexParser.parse("\alpha!");
+let node = mathLatexParser.parse("\\alpha!");
 console.log(node.check({
   type: "operator",
   operatorType: "postfix",
@@ -190,9 +190,9 @@ console.log(node.checkType("member expression"));
 // false
 ```
 
-### Node.prototype.hasChild(props: Object)
+### Node.prototype.hasChild(props: Object, checkArgs=false)
 
-This method can check for any of `args` with properties `props`. It doesn't check for`args`, it will be ignored.
+This method can check all properties except `args`, it will be ignored. Args will be checked if the 2nd arg (`checkArgs`) passed to `check` is `true`.
 
 ```js
 let node = mathLatexParser.parse("1+2");
@@ -201,12 +201,12 @@ console.log(node.hasChild({ type: "number", value: 1 }));
 // true
 ```
 
-### Node.prototype.hasChildR(props: Object)
+### Node.prototype.hasChildR(props: Object, checkArgs=false)
 
 The same as `hasChild`, but recursively.
 
 ```js
-let node = mathLatexParser.parse("\sin(1+2)");
+let node = mathLatexParser.parse("\\sin(1+2)");
 // { type: "function", name: "sin", args: [...], isBuiltin: true }
 console.log(node.hasChildR({ type: "number", value: 1 }));
 // true
