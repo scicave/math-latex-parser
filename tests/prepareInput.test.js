@@ -67,6 +67,8 @@ let tests = {
     "\\big{ 123 \\big}",
     "\\Bigg{ 123 \\Bigg}",
     "\\bigg{ 123 \\bigg}",
+    "\\operatorname{ 123 }",
+    "\\operatorname a",
   ], [
     "\\left\\{ \\right\\}",
     "\\right{ \\right}",
@@ -74,6 +76,7 @@ let tests = {
     "\\left{ }",
     "\\left }",
     "\\Big{ \\big}",
+    "\\operatorname 2",
   ]]
 
 };

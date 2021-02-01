@@ -8,6 +8,26 @@ class NodeCreator {
     throw new Error("Invalid argument passed to: ") + fname;
   }
 
+  id(name, extra={}) {
+    // builtin function
+    if (
+      typeof name !== "string" ||
+      typeof extra !== 'object'
+    )
+      this.invalidArgs("id");
+    return { type: "id", name, ...extra };
+  }
+
+  num(value, extra={}) {
+    // builtin function
+    if (
+      typeof value !== "number" ||
+      typeof extra !== 'object'
+    )
+      this.invalidArgs("number");
+    return { type: "number", value, ...extra };
+  }
+
   BIF(name, args) {
     // builtin function
     if (
@@ -44,6 +64,18 @@ class NodeCreator {
   sqrt(args) {
     if (!Array.isArray(args)) this.invalidArgs("sqrt");
     return { type: "sqrt", args };
+  }
+
+  opname(name, args) {
+    // operator
+    if (
+      typeof name !== "string" &&
+      typeof name !== "object" ||
+      !Array.isArray(args)
+    )
+      this.invalidArgs("opname");
+    if (typeof name === 'string') name = this.id(name);
+    return { type: "operatorname", name, args };
   }
 
   op(name, args) {

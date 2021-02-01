@@ -33,7 +33,12 @@ class Node {
     for (let p in props) {
       if (p === "type") {
         if (!this.checkType(props.type)) return false;
-      } else if (p !== "args" && props[p] !== this[p]) return false;
+      } else if (p !== "args") {
+        if (this[p] instanceof Node) {
+          if(!this[p].check(props[p])) return false;
+        }
+        else if (props[p] !== this[p]) return false;
+      }
     }
     return true;
   }

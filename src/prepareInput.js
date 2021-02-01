@@ -32,7 +32,7 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
     { opening: "\\|", closing: "\\|" },
   ];
 
-  let blockPrefixesReg = /^(\\left|\\right|\\begin|\\end|\\bigg|\\Bigg|\\big|\\Big)/;
+  let blockPrefixesReg = /^(\\operatorname|\\left|\\right|\\begin|\\end|\\bigg|\\Bigg|\\big|\\Big)/;
 
   // #endregion
 
@@ -84,8 +84,20 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       // new we habe begin-end block
     }
 
+
     // -------------------
     //      CASE 2
+    // -------------------
+
+    if (last.state.prefix === "\\operatorname") {
+      // just end here
+      Object.assign(state, defaultState);
+      i.value += b.closing.length; // consume the closing char
+      return;
+    }
+
+    // -------------------
+    //      CASE 3
     // -------------------
 
     let msg;
@@ -117,7 +129,7 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
     }
 
     // -------------------
-    //      CASE 3
+    //      CASE 4
     // -------------------
 
     // we are exiting to the parent block
@@ -159,8 +171,12 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       msg = `unexpected \\right at the block opening "${b.opening}"`;
 
     else if (
-      (state.prefix === "\\begin" || state.prefix === "\\end") &&
-      b.opening !== "{"
+      b.opening !== "{" &&
+      (
+        state.prefix === "\\begin" ||
+        state.prefix === "\\end" ||
+        state.prefix === "\\operatorname"
+      )
     )
       // such as: `\\begin [something] asd \\end [something]`
       msg = `expected block "{ ... }" but ${b.opening} found`;
@@ -203,7 +219,17 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
   while (i.value < input.length) {
 
     // validation and determine the current state
-    // the state is `neededArgsCount` and `argsFor`
+    if (state.prefix === "\\operatorname") {
+      if (!/^([a-z]|\\[a-z])/i.test(input.slice(i.value))) {
+        const location = peg$computeLocation(i.value, i.value);
+        error(`unexpected "${state.prefix}" before "${input[i.value]}"`, location);  
+      }
+      state.prefix = "";
+    } else if (state.prefix) {
+      const location = peg$computeLocation(i.value, i.value);
+      error(`unexpected "${state.prefix}" before "${input[i.value]}"`, location);
+    }
+
     input.slice(i.value).replace(needsArgRegExp, (m) => {
       // tex = "\\frac\\sqrt{1}{2}!"; in such a tex input, there would be error, but
       // tex = "\\sqrt\\frac{1}{2}!"; will still the same and will be parsed
@@ -288,10 +314,6 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
       // such as: `\\begin 1 asd \\end 1`
       let location = peg$computeLocation(i.value, i.value);
       error(`expected block "{something}" but "${input[i.value]}" found`, location);
-    } else if (state.prefix) {
-      // such as: `\\begin 1 asd \\end 1`
-      let location = peg$computeLocation(i.value, i.value);
-      error(`expected block opening ("{", "[", "(", ...) but "${input[i.value]}" found`, location);
     }
 
     if (!skipConsuming) {

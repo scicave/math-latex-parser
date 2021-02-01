@@ -24,4 +24,40 @@ module.exports = [
     struct: node.F("f", ["x"]),
   },
 
+  {
+    tex: '\\operatorname \\theta(1)',
+    struct: node.opname(
+      node.id("theta", { isBuiltin: true }),
+      [1]  
+    )
+  },
+
+  {
+    tex: '\\operatorname {\\theta} (1)',
+    struct: node.opname(
+      node.id("theta", { isBuiltin: true }),
+      [1]  
+    )
+  },
+
+  {
+    tex: '\\operatorname a(1)',
+    struct: node.opname("a", [1])
+  },
+
+  {
+    tex: '\\operatorname { a }(1)',
+    struct: node.opname("a", [1])
+  },
+
+  {
+    tex: '\\operatorname { 1 }(1)',
+    error: true, errorType: "syntax"
+  },
+
+  {
+    tex: '\\operatorname . (1)',
+    error: true, errorType: "syntax"
+  },
+
 ];

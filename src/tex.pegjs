@@ -303,15 +303,14 @@ builtinFuncsTitles =
 
 builtinFunctionsArgs = functionParentheses / Operation4
 
-Operatorname "\\operatorname" =
-  "\\operatorname" _
-  n:$(
-    "{" _ name:Name _ "}" { return name } /
-    ws name:char { return name }
+Operatorname =
+  "\\operatorname"
+  name:(
+    _ "{" _ name:(Name/SpecialSymbols) _ "}" { return name } /
+    ws+ name:(Name/SpecialSymbols) { return name }
   ) _ args:functionParentheses
   {
-    let opname = n.name;
-    return createNode("operatorname", args, { name: opname });
+    return createNode("operatorname", args, { name });
   }
 
 Function =
@@ -406,7 +405,7 @@ TexEntities =
     SpecialTexRules / SpecialSymbols
 
 SpecialSymbols = "\\" name:specialSymbolsTitles !char {
-  return createNode('id', null, {name, isBuiltin:true})
+  return createNode('id', null, { name, isBuiltin:true })
 }
 
 /// this may be operator, if so, don't consider as specialSymbol
