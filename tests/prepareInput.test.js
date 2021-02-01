@@ -19,6 +19,7 @@ let tests = {
     "1\t\n+2\\frac 1 2\n",
     "1\t\n+2_1\\frac 1 2\n",
     "1  \n+2^5 / \\theta",
+    "\\{{ 1 \\}}",
   ]],
 
   "should return the input trimed when braces are not important": [[

@@ -26,6 +26,7 @@ module.exports = function prepareInput(input, peg$computeLocation, error) {
     { opening: "(", closing: ")", prefixed: true },
     { opening: "[", closing: "]", prefixed: true },
     { opening: "|", closing: "|", prefixed: true },
+    { opening: "\\{{", closing: "\\}}" },
     { opening: "\\{", closing: "\\}" },
     { opening: "\\|", closing: "\\|" },
   ];
