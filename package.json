@@ -20,7 +20,7 @@
     "test": "jest",
     "lint": "eslint ./src/ --fix",
     "prod": "npm run lint && npm run build && npm run test",
-    "bundle": "parcel build ./lib/index.js -d ./lib -o bundle.min.js && parcel build ./lib/index.js --no-minify -d ./lib -o bundle.js",
+    "bundle": "parcel build ./lib/index.js --global mathLatexParser -d ./lib -o bundle.min.js && parcel build ./lib/index.js --global mathLatexParser --no-minify -d ./lib -o bundle.js",
     "debug": "node debug.js",
     "start": "npm run build:watch",
     "build:watch": "nodemon -w src -w tools -w build.js -i src/version.js -e js,pegjs -x 'npm run build'",
