@@ -1,3 +1,4 @@
+// TODO: unmatched brackets are valid incase of intervals
 /**
  * the main purpose of this function is to remove some brace "{}" that has np effect on the parse process
  */
