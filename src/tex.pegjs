@@ -14,7 +14,7 @@
 
 {
   {
-    let defaultConSeq = [
+    let defaultLetters = [
       "alpha", "Alpha", "beta", "Beta", "gamma", "Gamma", "pi", "Pi", "varpi", "phi", "Phi",
       "varphi", "mu", "theta", "vartheta", "epsilon", "varepsilon", "upsilon", "Upsilon",
       "zeta", "eta", "Lambda", "lambda", "kappa", "omega", "Omega", "psi", "Psi",
@@ -45,7 +45,7 @@
       autoMult: true,
       functions: [],
       keepParen: false,
-      builtinControlSeq: defaultConSeq,
+      builtinLetters: defaultLetters,
       builtinFunctions: defaultBIFs,
       extra: {
         memberExpressions: true,
@@ -69,9 +69,9 @@
       // replace the three dots with the default things.
       options.builtinFunctions.splice(0, 1, ...defaultBIFs);
 
-    if (options.builtinControlSeq[0] === '...')
+    if (options.builtinLetters[0] === '...')
       // replace the three dots with the default things.
-      options.builtinControlSeq.splice(0, 1, ...defaultConSeq);
+      options.builtinLetters.splice(0, 1, ...defaultLetters);
   }
 
   let rawInput = input,
@@ -81,9 +81,13 @@
 
   // they are static, shouldn't be controlled by options
   let texOperators1 = [
-    "approx", "leq", "geq", "neq", "gg", "ll",
-    "notin", "ni", "in", "cdot", "right"
+    "neq", "approx", "eqsim", "simeq",
+    "ge", "geq", "geqq", "geqslant", "gg", "ggg", "gggtr",
+    "le", "leq", "leqq", "leqslant", "ll", "lll", "llless",
+    "notin", "ni", "in", "isin"
   ];
+
+  /* .forEach(n=> console.log(`    <tr>\n      <td><code>\\${n}</code></td>\n    </tr>`)) */
 
   text = function() {
     return rawInput.substring(peg$savedPos, peg$currPos);
@@ -197,17 +201,10 @@
   }
 }
 
-Expression "expression" = _ expr:Operation0 _ { return expr; }
-
-Operation0 =
-  head:Operation1 tail:(_ "=" _ Operation1)* _{
-    return tail.reduce(function(result, element) {
-      return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
-    }, head);
-  }
+Expression "expression" = _ expr:Operation1 _ { return expr; }
 
 Operation1 =
-  head:Operation2 tail:(_ ("\\" title:texOperators1 !char { return title }) _ Operation2)* _{
+  head:Operation2 tail:(_ ("=" / "\\" a:texOperators1 { return a }) _ Operation2)* _{
     return tail.reduce(function(result, element) {
       return createNode("operator" , [result, element[3]], { name: element[1], operatorType: 'infix' });
     }, head);
@@ -408,7 +405,7 @@ specialSymbolsTitles =
   !(leftPrefixes !char)
   name:word &{ return !check(name, ["begin", "end", "right" /* for rightPrefixes */, "cdot"]) }
   {
-    if(check(name, options.builtinControlSeq)) return name;
+    if(check(name, options.builtinLetters)) return name;
     if (check(name, [
         options.builtinFunctions,
         options.functions,

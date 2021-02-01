@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Remove `options.operatorNames`, all names inside `\operatorname` are valid, you have to do extra validations if you want.
 - Remove `options.singleCharName`, latex conventionally uses single-char name for constants and variables.
-- Rename `builtIn`, the `I` into `i` in all places. For example `options.buitInControlSeq` into `options.builtinControlSeq`.
+- Rename `builtIn`, the `I` into `i` in all places. For example `options.buitInFunctions` into `options.builtinFunctions`.
+- `builtInControlSeq` rename to `builtinLetters`
 
 ### Added
 
@@ -21,6 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New AST Node `"set"`.
 - New AST Node `"tuple"`.
 - `"..."`, at the beginning of options array that has default value of type `Checker`. This ellipsis will put the default ones. 
+- `options.extra`
+  - `memberExpressions`
+  - `sets`
+  - `tuples`
+  - `intervals`
+  - `matrices`
+  - `ellipsis`
+    - `sets`
+    - `tuples`
+    - `intervals`
+    - `funcArgs`
+    - `infixOperators`
 
 ## [1.2.1] - 2020-10-25
 

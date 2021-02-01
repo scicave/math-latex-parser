@@ -1,7 +1,7 @@
 # math-latex-parser
 A mathematical parser for latex in math mode. We mean by mathematical that, arithmetic operations are considered. For example, if you pass "1+2", the result would by a (add node "+") with two children nodes of type number.
 
-**See also:** [math-parser](https://github.com/scicave/math-parser)
+**See also:** [math-parser](https://github.com/scicave/math-parser).
 
 ## Install
 
@@ -40,20 +40,114 @@ See `(package.json).scripts`.
 
 ## Operators Schema
 
-| Operator | Precedence | Associativity |
-| -------- | ---------- | ------------- |
-| `!`      | 6          | N/A           |
-| `^`      | 5          | left-to-right |
-| `*`      | 4          | left-to-right |
-| `/`      | 4          | left-to-right |
-| `+`      | 3          | left-to-right |
-| `-`      | 3          | left-to-right |
-| `!=`     | 2          | left-to-right |
-| `>=`     | 2          | left-to-right |
-| `<=`     | 2          | left-to-right |
-| `>`      | 2          | left-to-right |
-| `<`      | 2          | left-to-right |
-| `=`      | 1          | left-to-right |
+<table>
+  <thead>
+    <tr>
+      <td><strong>Operator</strong></td>
+      <td><strong>Precedence</strong></td>
+      <td><strong>Associativity</strong></td>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>!</code></td>
+      <td>5</td>
+      <td>N/A</td>
+    </tr>
+    <tr>
+      <td><code>^</code></td>
+      <td>4</td>
+      <td>left-to-right</td>
+    </tr>
+    <tr>
+      <td><code>*</code></td>
+      <td rowspan="2">3</td>
+      <td rowspan="2">left-to-right</td>
+    </tr>
+    <tr>
+      <td><code>/</code></td>
+    </tr>
+    <tr>
+      <td><code>+</code></td>
+      <td rowspan="2">2</td>
+      <td rowspan="2">left-to-right</td>
+    </tr>
+    <tr>
+      <td><code>-</code></td>
+    </tr>
+    <tr>
+      <td><code>=</code></td>
+      <td rowspan="100">1</td>
+      <td rowspan="100">left-to-right</td>
+    </tr>
+    <tr>
+      <td><code>\neq</code></td>
+    </tr>
+    <tr>
+      <td><code>\approx</code></td>
+    </tr>
+    <tr>
+      <td><code>\eqsim</code></td>
+    </tr>
+    <tr>
+      <td><code>\simeq</code></td>
+    </tr>
+    <tr>
+      <td><code>\ge</code></td>
+    </tr>
+    <tr>
+      <td><code>\geq</code></td>
+    </tr>
+    <tr>
+      <td><code>\geqq</code></td>
+    </tr>
+    <tr>
+      <td><code>\geqslant</code></td>
+    </tr>
+    <tr>
+      <td><code>\gg</code></td>
+    </tr>
+    <tr>
+      <td><code>\ggg</code></td>
+    </tr>
+    <tr>
+      <td><code>\gggtr</code></td>
+    </tr>
+    <tr>
+      <td><code>\le</code></td>
+    </tr>
+    <tr>
+      <td><code>\leq</code></td>
+    </tr>
+    <tr>
+      <td><code>\leqq</code></td>
+    </tr>
+    <tr>
+      <td><code>\leqslant</code></td>
+    </tr>
+    <tr>
+      <td><code>\ll</code></td>
+    </tr>
+    <tr>
+      <td><code>\lll</code></td>
+    </tr>
+    <tr>
+      <td><code>\llless</code></td>
+    </tr>
+    <tr>
+      <td><code>\notin</code></td>
+    </tr>
+    <tr>
+      <td><code>\ni</code></td>
+    </tr>
+    <tr>
+      <td><code>\in</code></td>
+    </tr>
+    <tr>
+      <td><code>\isin</code></td>
+    </tr>
+  </tbody>
+</table>
 
 ## AST Node
 
@@ -126,18 +220,12 @@ Type = `boolean`, default = `true`.
 
 You can parse some thing like this `3^6cd\sqrt af`, if false, the previous latex expression will throw an error while being parsed.
 
-### .singleCharName
-
-Type = `boolean`, default = `true`.
-
-If you want to use `asdas{d  }  _ {asdasd123}` as id for variable of function (see options.functions here below), you have to set options.singleCharName to false.
-
 ### .functions
 Type = `Array<`[Checker](#checker)`>`, default = `[]`.
 
-This is useful in some cases like, `f(x)`, or `f\left(x\right)`, the function id here is `f`, you can use `blablabla` when singleCharName is `false`.
+This is useful in some cases like, `f(x)`, or `f\left(x\right)`, the function id here is `f`.
 
-### .builtInControlSeq
+### .builtinLetters
 
 Type = `Array<`[Checker](#checker)`>`, default:
 
@@ -160,7 +248,7 @@ Type = `Array<`[Checker](#checker)`>`, default:
 
 If you want to expand the defaults put `"..."` as the first item in the array, at index `0`.
 
-### .builtInFunctions
+### .builtinFunctions
 
 Type = `Array<`[Checker](#checker)`>`, default:
 
@@ -181,9 +269,15 @@ All extra features are enabled.
 Example:
 
 ```js
+let tex = String.raw`
+  \begin{pmatrix}
+    1 & 2 \\
+    3 & 4
+  \end{pmatrix}
+`;
 mathLatexParser.parse(tex, {
   extra: {
-    // ...
+    matrices: true, // default
   }
 });
 ```
@@ -198,10 +292,10 @@ mathLatexParser.parse(tex, {
   - `(-.5, infinity)`
   - `(-pi, 1]`
   - `[2,5)`
-- `sets`: e.g., `{ 1, sqrt(pi), ..., sqrt(pi)^10 }`
+- `sets`: e.g., `\big{ 1, sqrt(pi), ..., sqrt(pi)^10 \big}`
 - `tuples`: e.g., `(1, 2, x, ...)`
-- `matrices`: e.g., `[ sinx, 1, 3; cosy, sqrt(3), 0 ]`
-- `ellipsis`: to allow the 3-dots "...", e.g., `{ 1, 3, 5, ... }`
+- `matrices`: e.g., `\left[ sinx, 1, 3; cosy, sqrt(3), 0 \right]`
+- `ellipsis`: to allow the 3-dots "...", e.g., `\{{ 1, 3, 5, ... \}}`
 
 ----------------------
 
@@ -211,14 +305,13 @@ Notes
 - This expression will throw syntax error, `1 + 2 + (...) + 10`
 - `extra.ellipsis` is more customizable:
   - `extra.ellipsis.matrices: boolean`
-- `extra.ellipsis.tuples: boolean`
+  - `extra.ellipsis.tuples: boolean`
   - `extra.ellipsis.sets: boolean`
-  - `extra.ellipsis.funcArgs: boolean`
+  - `extra.ellipsis.funcArgs: boolean`, to be used as a function argument.
   
 - Intervals, should have 2 terms as math expression:
-  - `(..., a]`: throw syntax error
-  - `(..., a)`: is a tuple, parsed if `extra.ellipsis` is `true`
-  - `[..., a]`: is a matrix, parsed if `extra.matrices` is `true`
+  - `(..., a]`: throw syntax error.
+  - `(..., a)`: is a tuple.
 
 
 ### Checker
