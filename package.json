@@ -1,6 +1,6 @@
 {
   "name": "@scicave/math-latex-parser",
-  "version": "1.2.1",
+  "version": "2.0.0",
   "description": "A mathematical (La)TeX parser.",
   "main": "./lib/index.js",
   "files": [
@@ -19,14 +19,14 @@
     "buildtest": "npm run build && npm run test",
     "test": "jest",
     "lint": "eslint ./src/ --fix",
-    "prod": "npm run lint && node generate-version-file.js && npm run build && npm run test",
+    "prod": "npm run lint && npm run build && npm run test",
     "debug": "node debug.js",
     "start": "npm run build:watch",
     "build:watch": "nodemon -w src -w tools -w build.js -i src/version.js -e js,pegjs -x 'npm run build'",
     "debug:watch": "nodemon -w src -w tools -w build.js -i src/version.js -e js,pegjs -x 'npm run build' -w debug.js -x 'npm run debug'",
     "test:watch": "npm t -- --watch",
     "preversion": "npm run prod",
-    "postversion": "npm run build"
+    "postversion": "node generate-version-file.js && npm run build"
   },
   "jest": {
     "verbose": true,

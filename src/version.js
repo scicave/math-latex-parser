@@ -1,4 +1,4 @@
 
 // this file is auto generated
 // the current version is:
-module.exports = "1.2.1";
+module.exports = "2.0.0";

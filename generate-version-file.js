@@ -1,5 +1,5 @@
-const pkg = require('../package.json')
-const filePath = '../src/version.js'
+const pkg = require('./package.json')
+const filePath = './src/version.js'
 const version = pkg.version
 const path = require('path')
 const fs = require('fs')
