@@ -1,5 +1,5 @@
 
-const oldPrepare = require("prepareInput");
+const oldPrepare = require("../src/prepareInput");
 const pegjsPolyFill = require('./pegjsPolyFill');
 
 const prepare = (tex) => {

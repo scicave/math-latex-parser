@@ -3,9 +3,15 @@ class Node {
   constructor (type, args, props) {
     Object.assign(this, props);
 
-    if (Node.types.values.indexOf(type) === -1) {
+    if (Node.types.values.indexOf(type) === -1)
       throw new Error('invalid type for the node, "' + type + '"');
-    } if(type === "operator") {
+
+    else if (["operatorname", "function"].indexOf(type) > -1) {
+      if (!args || !Array.isArray(args))
+        throw new Error('invalid args for the node, "' + type + '"');
+    }
+
+    else if(type === "operator") {
       if (!props.operatorType)
         throw new Error(`operator should have operatorType as well.`);
       if (props.operatorType !== "infix" && props.operatorType !== "postfix")
@@ -29,12 +35,19 @@ class Node {
   /**
    * check every property except args
    */
-  check(props) {
+  check(props, checkArgs=false) {
     for (let p in props) {
       if (p === "type") {
         if (!this.checkType(props.type)) return false;
-      } else if (p !== "args") {
-        if (this[p] instanceof Node) {
+      }
+      // always check args when checkArgs == true
+      else if (checkArgs || p !== "args") {
+        if (Array.isArray(props[p])) {
+          if (!Array.isArray(props[p])) return false;
+          else if (props[p].length !== this[p].length) return false;
+          if(!this.check.bind(this[p])(props[p])) return false;
+        }
+        else if (this[p] instanceof Node) {
           if(!this[p].check(props[p])) return false;
         }
         else if (props[p] !== this[p]) return false;
@@ -47,10 +60,10 @@ class Node {
    * if a descendant Node with props exsits recursively
    * @param props properties to check descendant Nodes against
    */
-  hasChildR(props) {
+  hasChildR(props, checkArgs=false) {
     if (this.args) 
       for (let arg of this.args)
-        if (arg.check(props) || arg.hasChildR(props))
+        if (arg.check(props, checkArgs) || arg.hasChildR(props, checkArgs))
           return true;
     return false;
   }
@@ -59,10 +72,10 @@ class Node {
    * check if this Node has a Node in its args with these `props`
    * @param props properties to check Nodes against
    */
-  hasChild(props) {
+  hasChild(props, checkArgs=false) {
     if (this.args)
       for (let arg of this.args)
-        if (arg.check(props))
+        if (arg.check(props, checkArgs))
           return true;
     return false;
   }
